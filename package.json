@@ -1,0 +1,43 @@
+{
+  "name": "continua-pack",
+  "version": "0.1.0",
+  "description": "Lib for working with continua packages",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/LeanKit-Labs/continua-pack"
+  },
+  "keywords": [
+    "continua",
+    "ci",
+    "cd",
+    "package"
+  ],
+  "author": "Alex Robson",
+  "license": "MIT License",
+  "bugs": {
+    "url": "https://github.com/LeanKit-Labs/continua-pack/issues"
+  },
+  "homepage": "https://github.com/LeanKit-Labs/continua-pack",
+  "devDependencies": {
+    "gulp": "^3.8.7",
+    "gulp-mocha": "^1.0.0",
+    "should": "^4.0.4"
+  },
+  "dependencies": {
+    "archiver": "^0.11.0",
+    "debug": "^2.0.0",
+    "lodash": "^2.4.1",
+    "map-stream": "^0.1.0",
+    "mkdirp": "^0.5.0",
+    "rimraf": "^2.2.8",
+    "semver": "^3.0.1",
+    "tar-fs": "^0.5.0",
+    "through2": "^0.6.1",
+    "vinyl-fs": "^0.3.7",
+    "when": "^3.4.5"
+  }
+}
