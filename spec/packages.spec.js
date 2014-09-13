@@ -1,5 +1,9 @@
 require( 'should' );
 var package = require( '../src/package.js' );
+var mkdirp = require( 'mkdirp' );
+var rimraf = require( 'rimraf' );
+var fs = require( 'fs' );
+mkdirp( './packages' );
 
 describe( 'when getting list of packages', function() {
 
@@ -85,7 +89,7 @@ describe( 'when getting list of packages', function() {
 		} );
 	} );
 
-describe( 'when getting term list from filtered packages', function() {
+	describe( 'when getting term list from filtered packages', function() {
 		var terms;
 		var matches;
 
@@ -150,4 +154,57 @@ describe( 'when getting term list from filtered packages', function() {
 		} );
 	} );
 
+	describe( 'when getting information for new package', function() {
+		var info;
+		before( function( done ) {
+			package.getInfo( 'test', { 
+				path: './', 
+				pack: { 
+					pattern: './src/**/*,./node_modules/**/*'
+				} }, './' )
+			.then( function( result ) {
+				info = result;
+				done();
+			} );
+		} );
+
+		it( 'should retrieve correct information', function() {
+			info.should.eql( 
+				{
+					branch: 'master',
+					build: 1,
+					commit: '75b73a17ef82f451511a377ecf2149d81ce2fc17',
+					name: 'test~arobson~master~0.1.0~1~darwin~any~any~x64',
+					owner: 'arobson',
+					output: 'packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
+					pattern: './src/**/*,./node_modules/**/*',
+					path: '/git/labs/continua/continua-pack/',
+					version: '0.1.0'
+				} );
+		} );
+
+		describe( 'when creating package from info', function() {			
+			before( function( done ) {
+				this.timeout( 10000 );
+				package.create( info )
+					.then( function() {
+						done();
+					} )
+					.then( null, function( err ) {
+						console.log( err.stack );
+						done();
+					} );
+			} );
+
+			it( 'should have created package', function() {
+				fs.existsSync( './packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' ).should.be.true;
+			} );
+
+			after( function( done ) {
+				rimraf( './packages', function() {
+					done();
+				} );
+			} );
+		} );
+	} );
 } );

@@ -13,7 +13,9 @@ var archiver = require( 'archiver' );
 var zlib = require( 'zlib' );
 var tar = require( 'tar-fs' );
 var rimraf = require( 'rimraf' );
+var git = require( './git.js' );
 var debug = require( 'debug' )( 'package' );
+var sysInfo = require( './sysInfo.js' )();
 
 function addPackage( root, packages, packageName ) {
 	var info = parsePackage( root, packageName );
@@ -22,7 +24,7 @@ function addPackage( root, packages, packageName ) {
 }
 
 function createPackage( packageInfo ) {
-	return pack( packageInfo.pattern, packageInfo.relative, packageInfo.path )
+	return pack( packageInfo.pattern, packageInfo.path, packageInfo.output )
 		.then( function() {
 			return packageInfo;
 		} );
@@ -69,32 +71,49 @@ function getInstalledVersion( filter, installed, ignored, noError ) {
 	} );
 }
 
-function getPackageInfo( projectName, config, version, repoInfo ) {
-	try {
-	var owner = repoInfo.owner;
-	var branch = repoInfo.branch;
-	var commit = repoInfo.commit;
-	var repoPath = repoInfo.path;
-	console.log( server );
-	return server
-		.getBuildNumber( owner, projectName, branch, version, commit )
-		.then( function( buildCount ) {
-			var relativePath = path.join( repoPath, config.pack.path );
-			var packageName = [ projectName, owner, branch, version, buildCount, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
-			var packagePath = path.join( './packages', packageName + '.tar.gz' );
-			return {
-				relative: relativePath,
-				name: packageName,
-				path: packagePath,
-				build: buildCount,
-				branch: branch,
-				commit: commit,
-				owner: owner,
-				version: version,
-				pattern: config.pack.pattern,
-			};
-		 } );
-	} catch( e ) { console.log( e.stack ); }
+function getPackageInfo( projectName, config, repoInfo ) {
+	var owner;
+	var branch;
+	var commit;
+	var repoPath;
+	var projectPath;
+	var repoPromise;
+
+	if( _.isString( repoInfo ) ) {
+		repoPromise = git.repo( repoInfo )
+			.then( function( info ) {
+				owner = info.owner;
+				branch = info.branch;
+				commit = info.commit;
+				projectPath = path.join( info.path, config.path );
+				repoPath = repoInfo;
+				return projectPath;
+			} );
+	} else {
+		owner = repoInfo.owner;
+		branch = repoInfo.branch;
+		commit = repoInfo.commit;
+		projectPath = path.join( repoInfo.path, config.path );
+		repoPath = repoInfo.path;
+		repoPromise = when( projectPath );
+	}
+	var versionPromise = when.try( git.getVersions, repoPromise );
+	return when.try( function( versions ) {
+		var last = versions[ versions.length - 1 ];
+		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
+		var packagePath = path.join( './packages', packageName + '.tar.gz' );
+		return {
+			path: projectPath,
+			name: packageName,
+			output: packagePath,
+			build: last.build,
+			branch: branch,
+			commit: commit,
+			owner: owner,
+			version: last.version,
+			pattern: config.pack.pattern,
+		};
+	}, versionPromise );
 }
 
 function getPackageVersion( file ) {
@@ -110,7 +129,7 @@ function pack( pattern, workingPath, target ) {
 		var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
 
 		output.on( 'close', function() {
-			resolve();
+			resolve( files );
 		} );
 
 		archive.on( 'error', function( err ) {
@@ -229,12 +248,13 @@ module.exports = {
 	add: addPackage,
 	copy: uploadPackage,
 	create: createPackage,
+	find: findPackage,
+	getInfo: getPackageInfo,
 	getInstalled: getInstalledVersion,
 	getList: scanPackages,
 	getPackageVersion: getPackageVersion,
-	find: findPackage,
 	pack: pack,
-	unpack: unpack,
 	parse: parsePackage,
-	terms: termList
+	terms: termList,
+	unpack: unpack
 };
