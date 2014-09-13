@@ -33,7 +33,7 @@ projectName~owner~branch~version~build~osFamily~os~osVersion~architecture
 
 ### add( root, packages, packageName )
 
-	Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub).
+> Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Adds a package by name to an array of packages by parsing the details from the package name and appending the package information to the `packages` array. Returns the information that was added to the array.
 
@@ -51,7 +51,7 @@ packages.parse( './packages', packageList, 'test~arobson~master~0.1.0~1~darwin~a
 
 ### copy( root, temp, packageName, packages )
 
-	Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub).
+> Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Copy's a package from a temporary storage directory (i.e. after being uploaded) to the intended long-term path and then removes the temporary file. This also uses the add method to add the package details to the `packages` list. Returns a promise to indicate success of the copy and remove operations.
 
@@ -72,9 +72,9 @@ packages.copy(
 
 ### create( packageInfo )
 
-	Intended for use in build agents/clis: 
-		[continua-agent](https://github.com/LeanKit-Labs/continua-agent)
-		[continua-cli](https://github.com/LeanKit-Labs/continua-cli).
+> For use in build agents/clis: 
+> * [continua-agent](https://github.com/LeanKit-Labs/continua-agent)
+> * [continua-cli](https://github.com/LeanKit-Labs/continua-cli)
 
 Creates a new package from a package information data structure. (see getInfo for obtaining the information required to seed this function)
 
@@ -103,9 +103,9 @@ var matches = package.find( packages, { owner: 'arobson', branch: 'master' } );
 
 ### getInfo( projectName, projectConfig, repositoryPath )
 
-	Intended for use in build agents/clis: 
-		[continua-agent](https://github.com/LeanKit-Labs/continua-agent)
-		[continua-cli](https://github.com/LeanKit-Labs/continua-cli).
+> For use in build agents/clis: 
+> * [continua-agent](https://github.com/LeanKit-Labs/continua-agent)
+> * [continua-cli](https://github.com/LeanKit-Labs/continua-cli)
 
 Determines key information about the package by examining the git repository and version file. Returns a promise that should resolve to the hash. The primary use for this data structure is to provide necessary data for package creation.
 
@@ -136,7 +136,7 @@ package.getInfo( 'test', config, './' )
 
 ### getInstalled( filter, installed, [ignored], [noError] )
 
-	Intended for use with the [bootstrapper](https://github.com/LeanKit-Labs/continua).
+> For use in bootstrappers (as in [continua](https://github.com/LeanKit-Labs/continua))
 
 Finds the most recent version installed within a relative path. The bootstrapper stores all installed versions under a common directory (./installed) and each version has its own directory. Returns the latest version installed on success.
 
@@ -154,7 +154,7 @@ package.getInstalled( /.*/, './installed', [], true )
 
 ### getList( root )
 	
-	Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub).
+> For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Scans a given directory structure starting at a relative path to build an array containing package information for all packages found. Returns a promise that resolves to the array on success.
 
@@ -168,9 +168,9 @@ package.getList( './packages' )
 
 ### pack
 
-	Intended for use in build agents/clis: 
-		[continua-agent](https://github.com/LeanKit-Labs/continua-agent)
-		[continua-cli](https://github.com/LeanKit-Labs/continua-cli).
+> For use in build agents/clis: 
+> * [continua-agent](https://github.com/LeanKit-Labs/continua-agent)
+> * [continua-cli](https://github.com/LeanKit-Labs/continua-cli)
 
 ```javascript
 
@@ -178,7 +178,7 @@ package.getList( './packages' )
 
 ### parse
 
-	Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub).
+> For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 ```javascript
 
@@ -186,7 +186,7 @@ package.getList( './packages' )
 
 ### terms( packages )
 
-	Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub).
+> For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Produce a unique set of valid filter key/value pairs based on the package information array. Returns a promise that resolves to the array of terms on success.
 
@@ -200,7 +200,7 @@ package.terms( packages )
 
 ### unpack( artifact, target )
 
-	Intended for use with the [bootstrapper](https://github.com/LeanKit-Labs/continua).
+> For use in bootstrappers (as in [continua](https://github.com/LeanKit-Labs/continua))
 
 Unpackages a package (.tar.gz) to a target directory. If the unpack fails, this will attempt to remove the target and any contents. Returns a promise that resolves to the unpacked version or an error if the unpack fails.
 
