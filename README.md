@@ -29,11 +29,18 @@ Example:
 projectName~owner~branch~version~build~osFamily~os~osVersion~architecture
 ```
 
+## Versioning
+Continua's versioning strategy was designed to produce consistent results against a git repository's commit history. This also eliminates the need for a central coordinator to assign build numbers and results in a solution that will always produce the same build version given a specific commit.
+
+Versioning is determined based on commit history and project version. Once the file containing the version is located, the version is read from this file at each commit. The build number is incremented for every commit in which the version does not change.
+
+In the event that no commit has been created yet, the version will fall back to '0.0.0' and build '0'.
+
 ## API
 
 ### add( root, packages, packageName )
 
-> Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
+> For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Adds a package by name to an array of packages by parsing the details from the package name and appending the package information to the `packages` array. Returns the information that was added to the array.
 
@@ -51,7 +58,7 @@ packages.parse( './packages', packageList, 'test~arobson~master~0.1.0~1~darwin~a
 
 ### copy( root, temp, packageName, packages )
 
-> Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
+> For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Copy's a package from a temporary storage directory (i.e. after being uploaded) to the intended long-term path and then removes the temporary file. This also uses the add method to add the package details to the `packages` list. Returns a promise to indicate success of the copy and remove operations.
 
@@ -78,20 +85,20 @@ packages.copy(
 
 Creates a new package from a package information data structure. (see getInfo for obtaining the information required to seed this function)
 
-The result will be a tar.gz with the correct package name stored based on data in the packageInfo hash. Returns a promise indicating the success of the package creation. On success, the file paths included in the package are returned in an array.
+The result will be a tar.gz with the correct package name stored based on data in the packageInfo hash. Returns a promise indicating the success of the package creation. On success, a packageInfo hash is returned with a `files` property containing an array of all files packaged.
 
 ```javascript
 // packageInfo - a data structure containing the information necessary to create the package
 var packageInfo = package.getInfo( 'test', config, './' );
 package.create( packageInfo )
-	.then( function( packedFiles ) {
+	.then( function( packageInfo ) {
 		//on success 
 	} );
 ```
 
 ### find( packages, filter )
 
-	Intended for use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub).
+> For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
 Given a set of desired pacakge attributes (in hash format), return a sorted list of packages that satisfy the filter. Packages are sorted by sematic version (version-build) starting with the newest.
 
@@ -166,22 +173,36 @@ package.getList( './packages' )
 	} );
 ```
 
-### pack
+### pack( pattern, workingPath, target )
 
 > For use in build agents/clis: 
 > * [continua-agent](https://github.com/LeanKit-Labs/continua-agent)
 > * [continua-cli](https://github.com/LeanKit-Labs/continua-cli)
 
-```javascript
+This function is called by create and performs the actual packaging. Returns a promise that resolves to a list of the files included in the created archive.
 
+	Note: this call will create the target directory if it does not already exist
+
+```javascript
+// pattern - an array or comma delimited list of globs used to identify files for inclusion
+// workingPath - the relative working directory for all globs
+// target - path (including name) to the archive to create
+package.pack( pattern, workingPath, target )
+	.then( function( files ) {
+		// on success
+	} );
 ```
 
-### parse
+### parse( root, packageName)
 
 > For use in package hosting (as in [continua-hub](https://github.com/LeanKit-Labs/continua-hub))
 
-```javascript
+This function parses a package name in order to determine the metadata about the package.
 
+```javascript
+// root - the path where archives are being stored
+// packageName - the filename of the archive
+var info = package.parse( './packages', 'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' );
 ```
 
 ### terms( packages )
