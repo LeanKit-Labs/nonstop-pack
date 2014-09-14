@@ -13,7 +13,7 @@ The following information describes a package:
  * branch
  * version
  * build number
- * OS family (darwin, linux, windows)
+ * OS platform (darwin, linux, win32)
  * OS name (optional, default is `any`)
  * OS version (optional, default is `any`)
  * OS architecture (x86, x64)
