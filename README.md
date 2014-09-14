@@ -34,7 +34,11 @@ Continua's versioning strategy was designed to produce consistent results agains
 
 Versioning is determined based on commit history and project version. Once the file containing the version is located, the version is read from this file at each commit. The build number is incremented for every commit in which the version does not change.
 
-In the event that no commit has been created yet, the version will fall back to '0.0.0' and build '0'.
+Because of this approach, the file which specifies the version for a project must always remain in the same location and have the same file name. Changing this will break Continua's ability to determine versions across your repository's history.
+
+In the event that Continua is unable to locate the file specifying your project's version (this is probably only likely in .Net projects) - you can specify the file in the project section of the build file with the `versionFile` property.
+
+In the event that no commit has ever been made to the repository, the version will fall back to '0.0.0' and build '0'.
 
 ## API
 

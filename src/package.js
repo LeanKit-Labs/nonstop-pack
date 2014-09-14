@@ -98,7 +98,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		repoPath = repoInfo.path;
 		repoPromise = when( projectPath );
 	}
-	var versionPromise = when.try( git.getVersions, repoPromise );
+	var versionPromise = config.versionFile ? when.try( git.getVersionsFor, config.versionFile, repoPromise ) : when.try( git.getVersions, repoPromise );
 	return when.try( function( versions ) {
 		var last = versions[ versions.length - 1 ];
 		last = last || { version: '0.0.0', build: 0 };

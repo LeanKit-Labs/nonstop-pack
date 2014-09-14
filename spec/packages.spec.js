@@ -204,4 +204,36 @@ describe( 'when getting list of packages', function() {
 			} );
 		} );
 	} );
+
+	describe( 'when getting information for new package using versionFile', function() {
+		var info, version;
+		before( function( done ) {
+			var text = fs.readFileSync( './package.json' );
+			var json = JSON.parse( text );
+			version = json.version.split( '-' )[ 0 ];
+
+			package.getInfo( 'test', { 
+				path: './', 
+				versionFile: './package.json',
+				pack: { 
+					pattern: './src/**/*,./node_modules/**/*'
+				} }, './' )
+			.then( function( result ) {
+				info = result;
+				done();
+			} );
+		} );
+
+		it( 'should retrieve correct information', function() {
+			// omit file list and values that change due to commits in the repo
+			_.omit( info, 'files', 'build', 'commit', 'output', 'name' ).should.eql( 
+				{
+					branch: 'master',
+					owner: 'arobson',
+					version: version,
+					pattern: './src/**/*,./node_modules/**/*',
+					path: '/git/labs/continua/continua-pack/'
+				} );
+		} );
+	} );
 } );
