@@ -173,7 +173,7 @@ Scans a given directory structure starting at a relative path to build an array 
 // root - the path to where all package subfolders are stored
 package.getList( './packages' )
 	.then( function( packages ) {
-
+		// on success
 	} );
 ```
 
