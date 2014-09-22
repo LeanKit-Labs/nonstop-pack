@@ -1,7 +1,7 @@
-# continua-pack
-This library provides all functionality around the creation and handling of artifact packages for the continua CI/CD system.
+# nonstop-pack
+This library provides all functionality around the creation and handling of artifact packages for the nonstop CI/CD system.
 
-It is unlikely that you would consume this library directly unless you are working on a package host, build agent, CLI or bootstrapper. There are already continua projects for each of these use cases.
+It is unlikely that you would consume this library directly unless you are working on a package host, build agent, CLI or bootstrapper. There are already nonstop projects for each of these use cases.
 
 ## Packages
 
@@ -22,7 +22,7 @@ The following information describes a package:
 Packages are tarballed and gzipped (.tar.gz), there are no other supported formats at this time.
 
 ### Name format
-The information is combined in order delimited by `~`. While this does result in long names, it enables [continua-hub](https://github.com/LeanKit-Labs/continua-hub) to filter available packages by any of the information listed and means never having to guess what source produced a specific package.
+The information is combined in order delimited by `~`. While this does result in long names, it enables [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub) to filter available packages by any of the information listed and means never having to guess what source produced a specific package.
 
 Example:
 ```
