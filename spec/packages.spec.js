@@ -1,4 +1,5 @@
 require( 'should' );
+var _ = require( 'lodash' );
 var package = require( '../src/package.js' );
 var mkdirp = require( 'mkdirp' );
 var rimraf = require( 'rimraf' );
@@ -169,17 +170,13 @@ describe( 'when getting list of packages', function() {
 		} );
 
 		it( 'should retrieve correct information', function() {
-			info.should.eql( 
+			// omit file list and values that change due to commits in the repo
+			_.omit( info, 'files', 'build', 'commit', 'output', 'version', 'name' ).should.eql( 
 				{
 					branch: 'master',
-					build: 1,
-					commit: '75b73a17ef82f451511a377ecf2149d81ce2fc17',
-					name: 'test~arobson~master~0.1.0~1~darwin~any~any~x64',
 					owner: 'arobson',
-					output: 'packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
 					pattern: './src/**/*,./node_modules/**/*',
-					path: '/git/labs/continua/continua-pack/',
-					version: '0.1.0'
+					path: '/git/labs/continua/continua-pack/'
 				} );
 		} );
 
@@ -197,7 +194,7 @@ describe( 'when getting list of packages', function() {
 			} );
 
 			it( 'should have created package', function() {
-				fs.existsSync( './packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' ).should.be.true;
+				fs.existsSync( info.output ).should.be.true; // jshint ignore:line
 			} );
 
 			after( function( done ) {
@@ -205,6 +202,38 @@ describe( 'when getting list of packages', function() {
 					done();
 				} );
 			} );
+		} );
+	} );
+
+	describe( 'when getting information for new package using versionFile', function() {
+		var info, version;
+		before( function( done ) {
+			var text = fs.readFileSync( './package.json' );
+			var json = JSON.parse( text );
+			version = json.version.split( '-' )[ 0 ];
+
+			package.getInfo( 'test', { 
+				path: './', 
+				versionFile: './package.json',
+				pack: { 
+					pattern: './src/**/*,./node_modules/**/*'
+				} }, './' )
+			.then( function( result ) {
+				info = result;
+				done();
+			} );
+		} );
+
+		it( 'should retrieve correct information', function() {
+			// omit file list and values that change due to commits in the repo
+			_.omit( info, 'files', 'build', 'commit', 'output', 'name' ).should.eql( 
+				{
+					branch: 'master',
+					owner: 'arobson',
+					version: version,
+					pattern: './src/**/*,./node_modules/**/*',
+					path: '/git/labs/continua/continua-pack/'
+				} );
 		} );
 	} );
 } );

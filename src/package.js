@@ -25,7 +25,8 @@ function addPackage( root, packages, packageName ) {
 
 function createPackage( packageInfo ) {
 	return pack( packageInfo.pattern, packageInfo.path, packageInfo.output )
-		.then( function() {
+		.then( function( list ) {
+			packageInfo.files = list;
 			return packageInfo;
 		} );
 }
@@ -97,9 +98,10 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		repoPath = repoInfo.path;
 		repoPromise = when( projectPath );
 	}
-	var versionPromise = when.try( git.getVersions, repoPromise );
+	var versionPromise = config.versionFile ? when.try( git.getVersionsFor, config.versionFile, repoPromise ) : when.try( git.getVersions, repoPromise );
 	return when.try( function( versions ) {
 		var last = versions[ versions.length - 1 ];
+		last = last || { version: '0.0.0', build: 0 };
 		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
 		var packagePath = path.join( './packages', packageName + '.tar.gz' );
 		return {
@@ -123,6 +125,7 @@ function getPackageVersion( file ) {
 
 function pack( pattern, workingPath, target ) {
 	return when.promise( function( resolve, reject ) {
+		mkdirp.sync( path.dirname( target ) );
 		var files = [];
 		var patterns = _.isArray( pattern ) ? pattern : pattern.split( ',' );
 		var output = fs.createWriteStream( target );

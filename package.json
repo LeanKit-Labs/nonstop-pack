@@ -1,17 +1,17 @@
 {
-  "name": "continua-pack",
-  "version": "0.1.0-1",
-  "description": "Lib for working with continua packages",
+  "name": "nonstop-pack",
+  "version": "0.1.0-4",
+  "description": "Lib for working with nonstop packages",
   "main": "src/package.js",
   "scripts": {
     "test": "gulp test"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/LeanKit-Labs/continua-pack"
+    "url": "git://github.com/LeanKit-Labs/nonstop-pack"
   },
   "keywords": [
-    "continua",
+    "nonstop",
     "ci",
     "cd",
     "package"
@@ -19,9 +19,9 @@
   "author": "Alex Robson",
   "license": "MIT License",
   "bugs": {
-    "url": "https://github.com/LeanKit-Labs/continua-pack/issues"
+    "url": "https://github.com/LeanKit-Labs/nonstop-pack/issues"
   },
-  "homepage": "https://github.com/LeanKit-Labs/continua-pack",
+  "homepage": "https://github.com/LeanKit-Labs/nonstop-pack",
   "devDependencies": {
     "gulp": "^3.8.7",
     "gulp-mocha": "^1.0.0",
