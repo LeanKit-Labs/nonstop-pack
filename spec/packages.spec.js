@@ -176,7 +176,7 @@ describe( 'when getting list of packages', function() {
 					branch: 'master',
 					owner: 'arobson',
 					pattern: './src/**/*,./node_modules/**/*',
-					path: '/git/labs/continua/continua-pack/'
+					path: '/git/labs/nonstop/nonstop-pack/'
 				} );
 		} );
 
@@ -232,7 +232,7 @@ describe( 'when getting list of packages', function() {
 					owner: 'arobson',
 					version: version,
 					pattern: './src/**/*,./node_modules/**/*',
-					path: '/git/labs/continua/continua-pack/'
+					path: '/git/labs/nonstop/nonstop-pack/'
 				} );
 		} );
 	} );
