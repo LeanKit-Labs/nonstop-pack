@@ -19,7 +19,7 @@ describe( 'when getting basic information', function() {
 
 	it( 'should retrieve necessary repository data from environment', function() {
 		repoInfo.owner.should.equal( 'arobson' );
-		repoInfo.repository.should.equal( 'continua-pack' );
+		repoInfo.repository.should.equal( 'nonstop-pack' );
 		repoInfo.branch.should.equal ( 'master' );
 		repoInfo.path.should.equal( path.resolve( './' ) );
 		repoInfo.commit.length.should.equal( 40 );
