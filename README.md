@@ -94,7 +94,7 @@ The result will be a tar.gz with the correct package name stored based on data i
 ```javascript
 // packageInfo - a data structure containing the information necessary to create the package
 var packageInfo = package.getInfo( 'test', config, './' );
-package.create( packageInfo )
+packages.create( packageInfo )
 	.then( function( packageInfo ) {
 		//on success 
 	} );
@@ -109,7 +109,7 @@ Given a set of desired pacakge attributes (in hash format), return a sorted list
 ```javascript
 // packages - the array of package details
 // filter - the hash of attribute values to match
-var matches = package.find( packages, { owner: 'arobson', branch: 'master' } );
+var matches = packages.find( packages, { owner: 'arobson', branch: 'master' } );
 ```
 
 ### getInfo( projectName, projectConfig, repositoryPath )
@@ -139,7 +139,7 @@ The format of the object is:
 // projectName - the name of the project, ex: 'test'
 // projectConfig - the build configuration for the project
 // repositoryPath - the relative path for the repository
-package.getInfo( 'test', config, './' )
+packages.getInfo( 'test', config, './' )
 	.then( function( info ) {
 		// on success
 	} );
@@ -157,7 +157,7 @@ Finds the most recent version installed within a relative path. The bootstrapper
 // ignored - (optional) - a list of versions to exclude
 // noError - (optional) - a flag that causes the function to resolve to undefined in the event of an error
 
-package.getInstalled( /.*/, './installed', [], true )
+packages.getInstalled( /.*/, './installed', [], true )
 	.then( function( latestVersion ) {
 		// on success
 	} )
@@ -171,7 +171,7 @@ Scans a given directory structure starting at a relative path to build an array 
 
 ```javascript
 // root - the path to where all package subfolders are stored
-package.getList( './packages' )
+packages.getList( './packages' )
 	.then( function( packages ) {
 		// on success
 	} );
@@ -191,7 +191,7 @@ This function is called by create and performs the actual packaging. Returns a p
 // pattern - an array or comma delimited list of globs used to identify files for inclusion
 // workingPath - the relative working directory for all globs
 // target - path (including name) to the archive to create
-package.pack( pattern, workingPath, target )
+packages.pack( pattern, workingPath, target )
 	.then( function( files ) {
 		// on success
 	} );
@@ -206,7 +206,7 @@ This function parses a package name in order to determine the metadata about the
 ```javascript
 // root - the path where archives are being stored
 // packageName - the filename of the archive
-var info = package.parse( './packages', 'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' );
+var info = packages.parse( './packages', 'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' );
 ```
 
 ### terms( packages )
@@ -217,7 +217,7 @@ Produce a unique set of valid filter key/value pairs based on the package inform
 
 ```javascript
 // packages - the array of package information
-package.terms( packages )
+packages.terms( packages )
 	.then( function( terms ) {
 		// on success
 	} );
@@ -232,7 +232,7 @@ Unpackages a package (.tar.gz) to a target directory. If the unpack fails, this 
 ```javascript
 // artifact - path including the package file
 // target - path to unpack into
-package.unpack( 
+packages.unpack( 
 		'./packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
 		'./installed/test-arobson-master-0.1.0-1' )
 	.then( function( version ) {

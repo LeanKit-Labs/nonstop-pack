@@ -193,7 +193,7 @@ function scanPackages( root ) {
 	var list = [];
 	var add = processPackage.bind( null, root );
 	return when.promise( function( resolve, reject ) {
-		vinyl.src( '**/*.tar.gz', { cwd: root, read: false } )
+		vinyl.src( '**/*.tar.gz', { cwd: root, read: false, dot: true } )
 			.pipe( map( add ) )
 			.on( 'data', list.push.bind( list ) )
 			.on( 'error', reject )
