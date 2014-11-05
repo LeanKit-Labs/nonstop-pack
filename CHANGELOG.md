@@ -1,5 +1,8 @@
 ## 0.1.0
 
+### prerelease 6
+Expand how package information is gathered to support complete path information for packages found by the CLI.
+
 ### prerelease 5
 Fix issue where the `getList` call ignored packages with dotted folders in the name.
 

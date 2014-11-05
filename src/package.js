@@ -164,11 +164,13 @@ function pack( pattern, workingPath, target ) {
 	} );
 }
 
-function parsePackage( root, packageName ) {
+function parsePackage( root, packageName, directory ) {
 	var parts = packageName.split( '~' );
 	var relative = [ parts[ 0 ], parts[ 1 ], parts[ 2 ] ].join( '-' );
 	return {
 		directory: path.join( root, relative ),
+		path: directory,
+		fullPath: path.join( directory || root, packageName ),
 		project: parts[ 0 ],
 		owner: parts[ 1 ],
 		branch: parts[ 2 ],
@@ -185,7 +187,8 @@ function parsePackage( root, packageName ) {
 
 function processPackage( root, packageFile, cb ) {
 	var file = path.basename( packageFile.path );
-	var info = parsePackage( root, file );
+	var dir = path.dirname( packageFile.path );
+	var info = parsePackage( root, file, dir );
 	cb( null, info );
 }
 

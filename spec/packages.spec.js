@@ -50,6 +50,11 @@ describe( 'when getting list of packages', function() {
 
 		before( function() {
 			terms = package.terms( list );
+			_.remove( terms, function( item ) {
+				return _.any( item, function( val ) {
+					return val === 'path' || val === 'fullPath';
+				} );
+			} );
 		} );
 
 		it( 'should return correct list of terms', function() {
@@ -97,6 +102,11 @@ describe( 'when getting list of packages', function() {
 		before( function() {
 			matches = package.find( list, { branch: 'branch2' } );
 			terms = package.terms( matches );
+			_.remove( terms, function( item ) {
+				return _.any( item, function( val ) {
+					return val === 'path' || val === 'fullPath';
+				} );
+			} );
 		} );
 
 		it( 'should return correct list of terms', function() {
