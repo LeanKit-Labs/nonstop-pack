@@ -22,7 +22,7 @@ The following information describes a package:
 Packages are tarballed and gzipped (.tar.gz), there are no other supported formats at this time.
 
 ### Name format
-The information is combined in order delimited by `~`. While this does result in long names, it enables [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub) to filter available packages by any of the information listed and means never having to guess what source produced a specific package.
+The information is combined in order delimited by `~`. While this does result in long names, it enables [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index) to filter available packages by any of the information listed and means never having to guess what source produced a specific package. It also avoids having to unpack a tarball or ask a central server for information about the package.
 
 Example:
 ```
@@ -44,7 +44,7 @@ In the event that no commit has ever been made to the repository, the version wi
 
 ### add( root, packages, packageName )
 
-> For use in package hosting (as in [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub))
+> For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 Adds a package by name to an array of packages by parsing the details from the package name and appending the package information to the `packages` array. Returns the information that was added to the array.
 
@@ -62,7 +62,7 @@ packages.parse( './packages', packageList, 'test~arobson~master~0.1.0~1~darwin~a
 
 ### copy( root, temp, packageName, packages )
 
-> For use in package hosting (as in [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub))
+> For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 Copy's a package from a temporary storage directory (i.e. after being uploaded) to the intended long-term path and then removes the temporary file. This also uses the add method to add the package details to the `packages` list. Returns a promise to indicate success of the copy and remove operations.
 
@@ -102,7 +102,7 @@ packages.create( packageInfo )
 
 ### find( packages, filter )
 
-> For use in package hosting (as in [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub))
+> For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 Given a set of desired pacakge attributes (in hash format), return a sorted list of packages that satisfy the filter. Packages are sorted by sematic version (version-build) starting with the newest.
 
@@ -165,7 +165,7 @@ packages.getInstalled( /.*/, './installed', [], true )
 
 ### getList( root )
 	
-> For use in package hosting (as in [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub))
+> For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 Scans a given directory structure starting at a relative path to build an array containing package information for all packages found. Returns a promise that resolves to the array on success.
 
@@ -199,7 +199,7 @@ packages.pack( pattern, workingPath, target )
 
 ### parse( root, packageName, [directory] )
 
-> For use in package hosting (as in [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub))
+> For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 This function parses a package name in order to determine the metadata about the package.
 
@@ -213,7 +213,7 @@ The optional directory argument provides a way to specify the path a packagefile
 
 ### terms( packages )
 
-> For use in package hosting (as in [nonstop-hub](https://github.com/LeanKit-Labs/nonstop-hub))
+> For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 Produce a unique set of valid filter key/value pairs based on the package information array. Returns a promise that resolves to the array of terms on success.
 
@@ -263,5 +263,5 @@ The following nonstop projects rely on this library:
  * [build library](https://github.com/LeanKit-Labs/nonstop-build)
  * [build cli](https://github.com/LeanKit-Labs/nonstop-cli)
  * [build agent](https://github.com/LeanKit-Labs/nonstop-agent)
- * [package host](https://github.com/LeanKit-Labs/nonstop-hub)
+ * [package host](https://github.com/LeanKit-Labs/nonstop-index)
  * [bootstrapper](https://github.com/LeanKit-Labs/nonstop)

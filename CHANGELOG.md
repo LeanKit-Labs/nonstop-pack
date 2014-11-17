@@ -1,5 +1,8 @@
 ## 0.1.0
 
+### prerelease 7
+Fix bug in how file was being copied during upload.
+
 ### prerelease 6
 Expand how package information is gathered to support complete path information for packages found by the CLI.
 

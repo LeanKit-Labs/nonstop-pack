@@ -2,7 +2,7 @@ var vinyl = require( 'vinyl-fs' );
 var map = require( 'map-stream' );
 var semver = require( 'semver' );
 var when = require( 'when' );
-var whenNode = require( 'when/node' );
+var lift = require( 'when/node' ).lift;
 var pipeline = require( 'when/pipeline' );
 var path = require( 'path' );
 var fs = require( 'fs' );
@@ -244,10 +244,8 @@ function uploadPackage( root, tmp, packageName, packages ) {
 	var info = addPackage( root, packages, packageName );
 	var destination = path.join( info.directory, packageName );
 	mkdirp.sync( info.directory );
-	return pipeline( [ 
-		whenNode.lift( fs.rename ).bind( fs )( tmp, destination ),
-		whenNode.lift( fs.unlink ).bind( fs )( tmp )
-	] );
+	var rename = lift( fs.rename );
+	return rename( tmp, destination );
 }
 
 module.exports = {

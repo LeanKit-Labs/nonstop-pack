@@ -1,6 +1,6 @@
 {
   "name": "nonstop-pack",
-  "version": "0.1.0-6",
+  "version": "0.1.0-7",
   "description": "Lib for working with nonstop packages",
   "main": "src/package.js",
   "scripts": {
