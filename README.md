@@ -245,9 +245,6 @@ packages.unpack(
 ## Dependencies
 This would not have been possible without several great Node modules:
 
- * vinyl-fs <- this is __awesome__
- * through2
- * map-stream
  * archiver
  * tar-fs
  * when
@@ -256,6 +253,7 @@ This would not have been possible without several great Node modules:
  * rimraf
  * mkdirp
  * debug
+ * globulesce
 
 ## Dependents
 The following nonstop projects rely on this library:

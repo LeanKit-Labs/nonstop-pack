@@ -1,5 +1,8 @@
 ## 0.1.0
 
+### prerelease 9
+Swap out vinyl-fs in favor of globulesce. Removing dependencies on through2 and map-stream.
+
 ### prerelease 7
 Fix bug in how file was being copied during upload.
 

@@ -1,6 +1,6 @@
 {
   "name": "nonstop-pack",
-  "version": "0.1.0-7",
+  "version": "0.1.0-9",
   "description": "Lib for working with nonstop packages",
   "main": "src/package.js",
   "scripts": {
@@ -31,14 +31,12 @@
     "archiver": "^0.11.0",
     "configya": "^0.1.0",
     "debug": "^2.0.0",
+    "globulesce": "^0.1.1",
     "lodash": "^2.4.1",
-    "map-stream": "^0.1.0",
     "mkdirp": "^0.5.0",
     "rimraf": "^2.2.8",
     "semver": "^3.0.1",
     "tar-fs": "^0.5.0",
-    "through2": "^0.6.1",
-    "vinyl-fs": "^0.3.7",
     "when": "^3.4.5"
   }
 }

@@ -55,42 +55,43 @@ describe( 'when getting list of packages', function() {
 					return val === 'path' || val === 'fullPath';
 				} );
 			} );
+			terms.sort();
 		} );
 
 		it( 'should return correct list of terms', function() {
 			terms.should.eql( [
+				{ '0.0.1-5': 'version' },
 				{ x64: 'architecture' },
-				{ '10.9.2': 'osVersion' },
 				{ OSX: 'osName' },
 				{ darwin: 'platform' },
-				{ '2': 'build' },
-				{ '0.1.0-2': 'version' },
-				{ branch2: 'branch' },
+				{ '1': 'build' },
+				{ '0.0.1-1': 'version' },
+				{ branch1: 'branch' },
 				{ owner1: 'owner' },
 				{ proj1: 'project' },
-				{ '1': 'build' },
-				{ '0.2.0-1': 'version' },
-				{ branch1: 'branch' },
-				{ owner2: 'owner' },
-				{ '14.04LTS': 'osVersion' },
-				{ ubuntu: 'osName' },
-				{ linux: 'platform' },
-				{ '0.2.0-2': 'version' },
-				{ '3': 'build' },
-				{ '0.2.0-3': 'version' },
-				{ '4': 'build' },
-				{ '0.2.0-4': 'version' },
-				{ '5': 'build' },
-				{ '0.2.0-5': 'version' },
-				{ '0.0.1-1': 'version' },
+				{ '2': 'build' },
 				{ '0.0.1-2': 'version' },
+				{ '3': 'build' },
 				{ '0.0.1-3': 'version' },
+				{ '4': 'build' },
 				{ '0.0.1-4': 'version' },
-				{ '0.0.1-5': 'version' },
+				{ '5': 'build' },
+				{ '10.9.2': 'osVersion' },
 				{ '0.0.2-1': 'version' },
 				{ '0.0.2-2': 'version' },
 				{ '0.0.2-3': 'version' },
-				{ '0.1.0-1': 'version' }
+				{ '14.04LTS': 'osVersion' },
+				{ ubuntu: 'osName' },
+				{ linux: 'platform' },
+				{ '0.1.0-1': 'version' },
+				{ '0.1.0-2': 'version' },
+				{ branch2: 'branch' },
+				{ '0.2.0-1': 'version' },
+				{ owner2: 'owner' },
+				{ '0.2.0-2': 'version' },
+				{ '0.2.0-3': 'version' },
+				{ '0.2.0-4': 'version' },
+				{ '0.2.0-5': 'version' }
 			] );
 		} );
 	} );
@@ -169,7 +170,7 @@ describe( 'when getting list of packages', function() {
 		var info;
 		before( function( done ) {
 			package.getInfo( 'test', { 
-				path: './', 
+				path: './',
 				pack: { 
 					pattern: './src/**/*,./node_modules/**/*'
 				} }, './' )

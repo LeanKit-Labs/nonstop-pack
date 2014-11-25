@@ -1,5 +1,3 @@
-var vinyl = require( 'vinyl-fs' );
-var map = require( 'map-stream' );
 var semver = require( 'semver' );
 var when = require( 'when' );
 var lift = require( 'when/node' ).lift;
@@ -8,7 +6,6 @@ var path = require( 'path' );
 var fs = require( 'fs' );
 var mkdirp = require( 'mkdirp' );
 var _ = require( 'lodash' );
-var through = require( 'through2' );
 var archiver = require( 'archiver' );
 var zlib = require( 'zlib' );
 var tar = require( 'tar-fs' );
@@ -16,6 +13,10 @@ var rimraf = require( 'rimraf' );
 var git = require( './git.js' );
 var debug = require( 'debug' )( 'package' );
 var sysInfo = require( './sysInfo.js' )();
+var glob = require( 'globulesce' );
+var fs = require( 'fs' );
+var readdir = lift( fs.readdir );
+var stat = lift( fs.stat );
 
 function addPackage( root, packages, packageName ) {
 	var info = parsePackage( root, packageName );
@@ -43,33 +44,37 @@ function findPackage( packages, filter ) {
 
 function getInstalledVersion( filter, installed, ignored, noError ) {
 	var versions = [];
-	return when.promise( function( resolve, reject ) {
-		vinyl.src( '*', { cwd: installed } )
-			.pipe( map( function( f, cb ) {
-				if( !f._contents ) {
-					var version = path.basename( f.path );
-					if( !_.contains( ignored, version ) ) {
-						versions.push( version );
-					}
-				}
-				cb();
-			} ) )
-			.on( 'end', function() {
-				versions = _.filter( versions, function( v ) {
-					return filter.test( v );
-				} );
-				versions.sort( function( a, b ) {
-					return semver.rcompare( a, b );
-				} );
-				if( versions.length ) {
-					resolve( versions[ 0 ] );
-				} else if( noError ) {
-					resolve( undefined );
-				} else {
-					reject( undefined );
+	return readdir( installed )
+		.then( function( files ) {
+			var promises = _.map( files, function( file ) {
+				return stat( file );
+			} );
+			var directories = when.filter( promises, function( stats ) {
+				return stats.isDirectory();
+			} );
+			return when.reduce( directories, function( x, y ) {
+				return _.isArray( x ) ? x.concat( y ) : [ x, y ];
+			} );
+		} )
+		.then( function( directories ) {
+			var versions = _.map( directories, function( dir ) {
+				var version = path.basename( dir );
+				if( !_.contains( ignored, version ) ) {
+					return version;
 				}
 			} );
-	} );
+			var filtered = _.filter( versions, function( version ) {
+				return filter.test( version );
+			} );
+			filtered.sort( function( a, b ) {
+				return semver.rcompare( a, b );
+			} );
+			if( filtered.length ) {
+				return filtered[ 0 ];
+			} else {
+				return undefined;
+			}
+		} );
 }
 
 function getPackageInfo( projectName, config, repoInfo ) {
@@ -113,7 +118,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 			commit: commit,
 			owner: owner,
 			version: last.version,
-			pattern: config.pack.pattern,
+			pattern: config.pack ? config.pack.pattern : undefined,
 		};
 	}, versionPromise );
 }
@@ -126,41 +131,31 @@ function getPackageVersion( file ) {
 function pack( pattern, workingPath, target ) {
 	return when.promise( function( resolve, reject ) {
 		mkdirp.sync( path.dirname( target ) );
-		var files = [];
+		var archivedFiles = [];
 		var patterns = _.isArray( pattern ) ? pattern : pattern.split( ',' );
 		var output = fs.createWriteStream( target );
 		var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
 
 		output.on( 'close', function() {
-			resolve( files );
+			resolve( archivedFiles );
 		} );
-
 		archive.on( 'error', function( err ) {
 			reject( err );
 		} );
-
 		archive.pipe( output );
 
-		var packWrap = through.obj( function( chunk, enc, callback ) {
-			files.push( chunk.path );
-			if( chunk._contents === null ) {
-				callback();
-			} else {
-				archive.append( chunk._contents, { name: path.relative( workingPath, chunk.path ) } );
-				callback();
-			}
-		}, function( cb ) {
-			archive.finalize();
-			cb( null );
-		} );
-
-		vinyl.src( patterns, { cwd: workingPath } )
-			.on( 'finish', function() {
-				if( files.length === 0 ) {
-					reject( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' );
+		glob( workingPath, patterns, [ '.git' ] )
+			.then( function( files ) {
+				if( _.isEmpty( files ) ) {
+					reject( 'Node files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' );	
+				} else {
+					_.map( files, function( file ) {
+						archivedFiles.push( file );
+						archive.file( file, { name: path.relative( workingPath, file ) } );
+					} );
+					archive.finalize();
 				}
-			} )
-			.pipe( packWrap );
+			} );
 	} );
 }
 
@@ -186,24 +181,24 @@ function parsePackage( root, packageName, directory ) {
 }
 
 function processPackage( root, packageFile, cb ) {
-	var file = path.basename( packageFile.path );
-	var dir = path.dirname( packageFile.path );
+	var file = path.basename( packageFile );
+	var dir = path.dirname( packageFile );
 	var info = parsePackage( root, file, dir );
-	cb( null, info );
+	if( cb ) {
+		cb( null, info );
+	} else {
+		return info;
+	}
 }
 
 function scanPackages( root ) {
-	var list = [];
-	var add = processPackage.bind( null, root );
-	return when.promise( function( resolve, reject ) {
-		vinyl.src( '**/*.tar.gz', { cwd: root, read: false, dot: true } )
-			.pipe( map( add ) )
-			.on( 'data', list.push.bind( list ) )
-			.on( 'error', reject )
-			.on( 'end', function() {
-				resolve( list );
+	return glob( root, '**/*.tar.gz' )
+		.then( function( files ) {
+			var stuff = _.map( files, function( file ) {
+				return processPackage( root, file );
 			} );
-	} );
+			return stuff;
+		} );
 }
 
 function termList( packages ) {
