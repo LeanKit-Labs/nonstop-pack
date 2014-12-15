@@ -1,40 +1,61 @@
-var _ = require( 'lodash' ),
-	gulp = require( 'gulp' ),
-	mocha = require( 'gulp-mocha' ),
-	builtPatterns = [];
+var istanbul = require( 'gulp-istanbul' );
+var gulp = require( 'gulp' );
+var mocha = require( 'gulp-mocha' );
+var open = require( 'open' ); //jshint ignore : line
 
-function buildRegex( templates, prefix ) {
-	builtPatterns = templates.map( function( template ) {
-
-		var patt = template.replace( "$PREFIX$", prefix );
-		console.log( patt );
-		return new RegExp( patt, "gm" );
-	} );
+function cover( done ) {
+	gulp.src( [ './src/**/*.js' ] )
+		.pipe( istanbul() )
+		.pipe( istanbul.hookRequire() )
+		.on( 'finish', function() {
+			done( runSpecs() );
+		} );
 }
 
-gulp.task( 'lol', function() {
-	return gulp.src( [ './src/*.js' ] )
-		.pipe( prefix( { prefix: '/lol' } ) )
-		.pipe( gulp.dest( './lol' ) )
-		.on( 'end', function() { console.log( 'NO WAY!' ); } )
-		.on( 'error', function( e ) { console.log( 'As predicted: ', e.stack ); } );
+function runSpecs() { // jshint ignore : line
+	return gulp.src( [ './spec/**/*.spec.js' ], { read: false } )
+				.pipe( mocha( { reporter: 'spec' } ) );
+}
+
+function writeReport( cb, openBrowser, tests ) {
+	tests
+		.pipe( istanbul.writeReports() )
+		.on( 'end', function() {
+			if( openBrowser ) {
+				open( './coverage/lcov-report/index.html' );
+			}
+			cb();
+		} );
+}
+
+gulp.task( 'continuous-coverage', function( cb ) {
+	cover( writeReport.bind( undefined, cb, false ) );
+} );
+
+gulp.task( 'continuous-test', function() {
+	return runSpecs();
+} );
+
+gulp.task( 'coverage', function( cb ) {
+	cover( writeReport.bind( undefined, cb, true ) );
+} );
+
+gulp.task( 'coverage-watch', function() {
+	gulp.watch( [ './src/**/*', './spec/*.spec.js' ], [ 'continuous-coverage' ] );
 } );
 
 gulp.task( 'test', function() {
-	return gulp.src( [ './spec/**.spec.js' ], { read: false } )
-		.pipe( mocha( { reporter: 'spec' } ) )
+	return runSpecs()
 		.on( 'end', process.exit.bind( process, 0 ) )
 		.on( 'error', process.exit.bind( process, 1 ) );
 } );
 
-gulp.task( 'continuous-test', function() {
-	return gulp.src( [ './spec/**.spec.js' ], { read: false } )
-		.pipe( mocha( { reporter: 'spec' } ) );
+gulp.task( 'test-watch', function() {
+	gulp.watch( [ './src/**/*', './spec/*.spec.js' ], [ 'continuous-test' ] );
 } );
 
-gulp.task( 'watch', function() {
-	gulp.watch( [ './src/**', './spec/**' ], [ 'continuous-test' ] );
+gulp.task( 'default', [ 'continuous-coverage', 'coverage-watch' ], function() {
 } );
 
-gulp.task( 'default', [ 'continuous-test', 'watch' ], function() {
+gulp.task( 'specs', [ 'continuous-test', 'test-watch' ], function() {
 } );

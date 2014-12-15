@@ -1,5 +1,10 @@
 ## 0.1.0
 
+### prerelease 10
+ * add test coverage for `copy`, `unpack`, `getInstalled` and `getPackageVersion`
+ * replace use of `path.join` with `path.resolve` - join removes relative path specification './' (a bad thing)
+ * bug fixes in implementations of unpack and getInstalled
+
 ### prerelease 9
 Swap out vinyl-fs in favor of globulesce. Removing dependencies on through2 and map-stream.
 

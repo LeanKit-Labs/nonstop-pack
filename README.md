@@ -74,8 +74,8 @@ Copy's a package from a temporary storage directory (i.e. after being uploaded) 
 packages.copy( 
 		'./packages', 
 		'./tmp/891345iaghakk92thagk.tar.gz', 
-		packageList, 
-		'test~arobson~master~0.1.0~1~darwin~any~any~x64' 
+		'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
+		packageList
 	).then( function() { 
 		//on success 
 	} );
@@ -236,7 +236,7 @@ Unpackages a package (.tar.gz) to a target directory. If the unpack fails, this 
 // target - path to unpack into
 packages.unpack( 
 		'./packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
-		'./installed/test-arobson-master-0.1.0-1' )
+		'./installed/test-arobson-master/0.1.0-1' )
 	.then( function( version ) {
 		// on success
 	} );

@@ -47,14 +47,15 @@ function getInstalledVersion( filter, installed, ignored, noError ) {
 	return readdir( installed )
 		.then( function( files ) {
 			var promises = _.map( files, function( file ) {
-				return stat( file );
+				var relative = path.resolve( installed, file );
+				return { path: relative, stat: fs.statSync( relative ) };
 			} );
-			var directories = when.filter( promises, function( stats ) {
-				return stats.isDirectory();
+			var directories = when.filter( promises, function( file ) {
+				return file.stat.isDirectory();
 			} );
 			return when.reduce( directories, function( x, y ) {
-				return _.isArray( x ) ? x.concat( y ) : [ x, y ];
-			} );
+				return x.concat( y.path );
+			}, [] );
 		} )
 		.then( function( directories ) {
 			var versions = _.map( directories, function( dir ) {
@@ -91,7 +92,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 				owner = info.owner;
 				branch = info.branch;
 				commit = info.commit;
-				projectPath = path.join( info.path, config.path );
+				projectPath = path.resolve( info.path, config.path );
 				repoPath = repoInfo;
 				return projectPath;
 			} );
@@ -99,7 +100,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		owner = repoInfo.owner;
 		branch = repoInfo.branch;
 		commit = repoInfo.commit;
-		projectPath = path.join( repoInfo.path, config.path );
+		projectPath = path.resolve( repoInfo.path, config.path );
 		repoPath = repoInfo.path;
 		repoPromise = when( projectPath );
 	}
@@ -108,7 +109,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		var last = versions[ versions.length - 1 ];
 		last = last || { version: '0.0.0', build: 0 };
 		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
-		var packagePath = path.join( './packages', packageName + '.tar.gz' );
+		var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
 		return {
 			path: projectPath,
 			name: packageName,
@@ -147,7 +148,7 @@ function pack( pattern, workingPath, target ) {
 		glob( workingPath, patterns, [ '.git' ] )
 			.then( function( files ) {
 				if( _.isEmpty( files ) ) {
-					reject( 'Node files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' );	
+					reject( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' );	
 				} else {
 					_.map( files, function( file ) {
 						archivedFiles.push( file );
@@ -163,9 +164,9 @@ function parsePackage( root, packageName, directory ) {
 	var parts = packageName.split( '~' );
 	var relative = [ parts[ 0 ], parts[ 1 ], parts[ 2 ] ].join( '-' );
 	return {
-		directory: path.join( root, relative ),
+		directory: path.resolve( root, relative ),
 		path: directory,
-		fullPath: path.join( directory || root, packageName ),
+		fullPath: path.resolve( directory || root, packageName ),
 		project: parts[ 0 ],
 		owner: parts[ 1 ],
 		branch: parts[ 2 ],
@@ -218,26 +219,31 @@ function unpack( artifact, target ) {
 	var file = path.basename( artifact );
 	var version = getPackageVersion( file );
 	return when.promise( function( resolve, reject ) {
-		fs.createReadStream( artifact )
-			.pipe( zlib.createUnzip() )
-			.pipe( tar.extract( target ) )
-			.on( 'error', function ( err ) {
-				rimraf( path.resolve( target ), function( err ) {
-					if( err ) {
-						console.log( 'Could not delete failed install at', target, err.stack );
-					}
+		if( fs.existsSync( artifact ) ) {
+			mkdirp.sync( target );
+			fs.createReadStream( artifact )
+				.pipe( zlib.createUnzip() )
+				.pipe( tar.extract( target ) )
+				.on( 'error', function ( err ) {
+					rimraf( path.resolve( target ), function( err ) {
+						if( err ) {
+							console.log( 'Could not delete failed install at', target, err.stack );
+						}
+					} );
+					reject( err );
+				} )
+				.on( 'finish', function() {
+					resolve( version );
 				} );
-				reject( err );
-			} )
-			.on( 'finish', function() {
-				resolve( version );
-			} );
+		} else {
+			reject( new Error( 'The artifact file "' + artifact + '" could not be found.' ) );
+		}
 	} );
 }
 
 function uploadPackage( root, tmp, packageName, packages ) {
 	var info = addPackage( root, packages, packageName );
-	var destination = path.join( info.directory, packageName );
+	var destination = path.resolve( info.directory, packageName );
 	mkdirp.sync( info.directory );
 	var rename = lift( fs.rename );
 	return rename( tmp, destination );
