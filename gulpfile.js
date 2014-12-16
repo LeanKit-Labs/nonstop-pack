@@ -19,6 +19,9 @@ function runSpecs() { // jshint ignore : line
 
 function writeReport( cb, openBrowser, tests ) {
 	tests
+		.on( 'error', function() {
+			cb();
+		} )
 		.pipe( istanbul.writeReports() )
 		.on( 'end', function() {
 			if( openBrowser ) {

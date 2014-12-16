@@ -106,21 +106,26 @@ function getPackageInfo( projectName, config, repoInfo ) {
 	}
 	var versionPromise = config.versionFile ? when.try( git.getVersionsFor, config.versionFile, repoPromise ) : when.try( git.getVersions, repoPromise );
 	return when.try( function( versions ) {
-		var last = versions[ versions.length - 1 ];
-		last = last || { version: '0.0.0', build: 0 };
-		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
-		var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
-		return {
-			path: projectPath,
-			name: packageName,
-			output: packagePath,
-			build: last.build,
-			branch: branch,
-			commit: commit,
-			owner: owner,
-			version: last.version,
-			pattern: config.pack ? config.pack.pattern : undefined,
-		};
+		if( versions && versions.length ) {
+			var last = versions[ versions.length - 1 ];
+			last = last || { version: '0.0.0', build: 0 };
+			var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
+			var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
+			var info = {
+				path: projectPath,
+				name: packageName,
+				output: packagePath,
+				build: last.build,
+				branch: branch,
+				commit: commit,
+				owner: owner,
+				version: last.version,
+				pattern: config.pack ? config.pack.pattern : undefined,
+			};
+			return info;
+		} else {
+			throw new Error( 'No versions found for project "' + projectName + '" at ' + projectPath );
+		}
 	}, versionPromise );
 }
 
@@ -135,8 +140,7 @@ function pack( pattern, workingPath, target ) {
 		mkdirp.sync( path.dirname( target ) );
 		var archivedFiles = [];
 		var patterns = _.isArray( pattern ) ? pattern : pattern.split( ',' );
-		
-		glob( workingPath, patterns, [ '.git' ] )
+		return glob( workingPath, patterns, [ '.git' ] )
 			.then( function( files ) {
 				if( _.isEmpty( files ) ) {
 					reject( new Error( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' ) );	
@@ -158,6 +162,9 @@ function pack( pattern, workingPath, target ) {
 					} );
 					archive.finalize();
 				}
+			} )
+			.then( null, function( err ) {
+				reject( err );
 			} );
 	} );
 }

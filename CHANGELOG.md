@@ -1,5 +1,10 @@
 ## 0.1.0
 
+### prerelease 12
+ * Rework promise chains for git and version modules
+ * Fix issues in gulpfile when tests fail in continuous coverage mode
+ * Add spec to cover bad project path use case
+
 ### prerelease 11
 Fixing bugs with how pack behaved when pattern was undefined in the project.
 

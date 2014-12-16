@@ -213,13 +213,34 @@ describe( 'Package', function() {
 	} );
 
 	describe( 'when creating packages', function() {
-		describe( 'with invalid package pattern', function() {
-			var info;
+		describe( 'with invalid path', function() {
+			var error;
 			before( function( done ) {
+				this.timeout( 5000 );
+				package.getInfo( 'test', { 
+					path: './farts',
+					pack: {
+						pattern: '/durp/**'
+					} }, './' )
+				.then( null, function( err ) {
+					error = err;
+					done();
+				} );
+			} );
+			
+			it( 'should report error', function() {
+				error.toString().should.equal( 'Error: Cannot search for version files in bad path "/git/labs/nonstop/nonstop-pack/farts"' );
+			} );
+		} );
+
+		describe( 'with invalid package pattern', function() {
+			var error, info;
+			before( function( done ) {
+				this.timeout( 5000 );
 				package.getInfo( 'test', { 
 					path: './',
-					pack: { 
-						
+					pack: {
+						pattern: '/durp/**'
 					} }, './' )
 				.then( function( result ) {
 					info = result;
@@ -233,7 +254,7 @@ describe( 'Package', function() {
 					{
 						branch: 'master',
 						owner: 'arobson',
-						pattern: undefined,
+						pattern: '/durp/**',
 						path: '/git/labs/nonstop/nonstop-pack'
 					} );
 			} );
@@ -242,8 +263,13 @@ describe( 'Package', function() {
 				before( function( done ) {
 					package.create( info )
 						.then( null, function( err ) {
+							error = err;
 							done();
 						} );
+				} );
+
+				it( 'should report error', function() {
+					error.toString().should.equal( 'Error: No files matched the pattern "/durp/**" in path "/git/labs/nonstop/nonstop-pack". No package was generated.' );
 				} );
 
 				it( 'should have created package', function() {
@@ -279,7 +305,7 @@ describe( 'Package', function() {
 
 			describe( 'when creating package from info', function() {			
 				before( function( done ) {
-					this.timeout( 10000 );
+					this.timeout( 5000 );
 					package.create( info )
 						.then( function() {
 							done();

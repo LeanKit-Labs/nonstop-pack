@@ -47,23 +47,17 @@ function getRevisionListFor( filePath, path ) {
 }
 
 function getVersionHistory( path ) {
-	var deferred = when.defer();
-	version.getFile( path )
+	return version.getFile( path )
 		.then( function( file ) {
-			getVersionHistoryFor( file, path )
-				.then( function( list ) {
-					deferred.resolve( list );
-				} );
+			return getVersionHistoryFor( file, path );
 		} );
-	return deferred.promise;
 }
 
 function getVersionHistoryFor( filePath, path ) {
 	var versionHash = {};
-	var deferred = when.defer();
-	getRevisionListFor( filePath, path )
+	return getRevisionListFor( filePath, path )
 		.then( function( commits ) {
-			when.all( _.map( commits.reverse(), function( sha ) {
+			return when.all( _.map( commits.reverse(), function( sha ) {
 				return getFileAtSha( sha, filePath, path )
 					.then( function( content ) {
 						return { content: content, sha: sha };
@@ -86,11 +80,9 @@ function getVersionHistoryFor( filePath, path ) {
 					versionHash[ v.version ] = index;
 					return { sha: v.sha, version: v.version, build: index };
 				} );
-				deferred.resolve( results );
 				return results;
 			} );
 		} );
-	return deferred.promise;
 }
 
 function createInfo( path, branch, commit, owner, repo ) {

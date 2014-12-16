@@ -35,21 +35,17 @@ var searchPaths = [
 
 function getVersionFile( projectPath ) {
 	var resolvedPath = path.resolve( projectPath );
-	return when.promise( function( resolve, reject ) {
-		glob( resolvedPath, searchPaths )
-			.then( function( x ) {
-				if( _.isEmpty( x ) ) {
-					reject( new Error( 'None of the supported version specifiers could be found in ' + resolvedPath ) );
-				} else {
-					var file = x[ 0 ];
-					try {						
-						resolve( file );
-					} catch ( err ) {
-						reject( new Error( 'Failed to parse a version from the file ' + f + ' with error: ' + err ) );
-					}
-				}
-			} );			
-	} );
+	return glob( resolvedPath, searchPaths )
+		.then( function( x ) {
+			if( _.isEmpty( x ) ) {
+				return new Error( 'None of the supported version specifiers could be found in ' + resolvedPath );
+			} else {
+				return x[ 0 ];
+			}
+		} )
+		.then( null, function( err ) {
+			throw new Error( 'Cannot search for version files in bad path "' + projectPath + '"' );
+		} );
 }
 
 function getVersion( filePath, content ) {
