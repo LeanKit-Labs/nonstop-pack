@@ -1,5 +1,8 @@
 ## 0.1.0
 
+### prerelease 11
+Fixing bugs with how pack behaved when pattern was undefined in the project.
+
 ### prerelease 10
  * add test coverage for `copy`, `unpack`, `getInstalled` and `getPackageVersion`
  * replace use of `path.join` with `path.resolve` - join removes relative path specification './' (a bad thing)

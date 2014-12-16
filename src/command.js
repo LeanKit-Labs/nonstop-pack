@@ -8,7 +8,7 @@ function executeCommand( line, path ) {
 		var command = _.isArray( line ) ? line.join( ' ' ) : line;
 		exec( command, 
 			{ cwd: path },
-			function( err, stdout, stderr ) {
+			function( err, stdout /*, stderr */ ) {
 				if( err ) {
 					reject( { error: err, output: stdout } );
 				} else {

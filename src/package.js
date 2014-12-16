@@ -130,26 +130,28 @@ function getPackageVersion( file ) {
 }
 
 function pack( pattern, workingPath, target ) {
+	pattern = pattern || '';
 	return when.promise( function( resolve, reject ) {
 		mkdirp.sync( path.dirname( target ) );
 		var archivedFiles = [];
 		var patterns = _.isArray( pattern ) ? pattern : pattern.split( ',' );
-		var output = fs.createWriteStream( target );
-		var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
-
-		output.on( 'close', function() {
-			resolve( archivedFiles );
-		} );
-		archive.on( 'error', function( err ) {
-			reject( err );
-		} );
-		archive.pipe( output );
-
+		
 		glob( workingPath, patterns, [ '.git' ] )
 			.then( function( files ) {
 				if( _.isEmpty( files ) ) {
-					reject( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' );	
+					reject( new Error( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' ) );	
 				} else {
+					var output = fs.createWriteStream( target );
+					var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
+
+					output.on( 'close', function() {
+						resolve( archivedFiles );
+					} );
+					archive.on( 'error', function( err ) {
+						reject( err );
+					} );
+					archive.pipe( output );
+					
 					_.map( files, function( file ) {
 						archivedFiles.push( file );
 						archive.file( file, { name: path.relative( workingPath, file ) } );

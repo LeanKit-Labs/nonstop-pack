@@ -10,7 +10,6 @@ function getIP() {
 		return acc.concat( list );
 	}, [] );
 	var IPv4 = _.where( addresses, { family: 'IPv4' } )[ 0 ];
-	console.log( IPv4 );
 	return IPv4.address;
 }
 
