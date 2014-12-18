@@ -11,7 +11,7 @@ var zlib = require( 'zlib' );
 var tar = require( 'tar-fs' );
 var rimraf = require( 'rimraf' );
 var git = require( './git.js' );
-var debug = require( 'debug' )( 'package' );
+var debug = require( 'debug' )( 'nonstop:package' );
 var sysInfo = require( './sysInfo.js' )();
 var glob = require( 'globulesce' );
 var fs = require( 'fs' );
@@ -106,26 +106,27 @@ function getPackageInfo( projectName, config, repoInfo ) {
 	}
 	var versionPromise = config.versionFile ? when.try( git.getVersionsFor, config.versionFile, repoPromise ) : when.try( git.getVersions, repoPromise );
 	return when.try( function( versions ) {
+		var last;
 		if( versions && versions.length ) {
-			var last = versions[ versions.length - 1 ];
-			last = last || { version: '0.0.0', build: 0 };
-			var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
-			var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
-			var info = {
-				path: projectPath,
-				name: packageName,
-				output: packagePath,
-				build: last.build,
-				branch: branch,
-				commit: commit,
-				owner: owner,
-				version: last.version,
-				pattern: config.pack ? config.pack.pattern : undefined,
-			};
-			return info;
+			last = versions[ versions.length - 1 ];	
 		} else {
-			throw new Error( 'No versions found for project "' + projectName + '" at ' + projectPath );
+			debug( 'No versions found for project "' + projectName + '" at ' + projectPath + '. Using \'0.0.0\'.' );
+			last = last || { version: '0.0.0', build: 0 };
 		}
+		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
+		var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
+		var info = {
+			path: projectPath,
+			name: packageName,
+			output: packagePath,
+			build: last.build,
+			branch: branch,
+			commit: commit,
+			owner: owner,
+			version: last.version,
+			pattern: config.pack ? config.pack.pattern : undefined,
+		};
+		return info;
 	}, versionPromise );
 }
 

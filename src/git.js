@@ -9,6 +9,9 @@ function getBranch( path ) {
 	return exec( 'git rev-parse --abbrev-ref HEAD', path )
 		.then( function( branch ) {
 			return branch.trim();
+		} )
+		.then( null, function() {
+			return 'nobranch';
 		} );
 }
 
@@ -16,18 +19,24 @@ function getCommit( path ) {
 	return exec( 'git rev-parse HEAD', path )
 		.then( function( commit ) {
 			return commit.trim();
+		} )
+		.then( null, function() {
+			return 'none';
 		} );
 }
 
 function getFileAtSha( sha, filePath, path ) {
-	return exec( 'git show ' + sha + ':' + filePath + ' | cat', path );
+	return exec( 'git show ' + sha + ':' + filePath + ' | cat', path )
+		.then( null, function() {
+			return '';
+		} );
 }
 
 function getOwner( path ) {
 	var regex = /(https:\/\/|git@|git:\/\/)[^:\/]*[:\/]([^\/]*).*/;
 	return exec( 'git remote show origin -n | grep \'Fetch URL: .*\'', path )
 		.then( function( line ) {
-			return regex.exec( line )[ 2 ];
+			return regex.test( line ) ? regex.exec( line )[ 2 ] : 'anonymous';
 		} );
 }
 
@@ -35,7 +44,7 @@ function getRepository( path ) {
 	var regex = /(https:\/\/|git@|git:\/\/)[^:\/]*[:\/][^\/]*\/(.*)/;
 	return exec( 'git remote show origin -n | grep \'Fetch URL: .*\'', path )
 		.then( function( line ) {
-			return regex.exec( line )[ 2 ];
+			return regex.test( line ) ? regex.exec( line )[ 2 ] : 'norepo';
 		} );
 }
 

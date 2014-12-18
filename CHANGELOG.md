@@ -1,5 +1,8 @@
 ## 0.1.0
 
+### prerelease 13
+Fall back to placeholder/default values when a git repository doesn't exist to collect build information from.
+
 ### prerelease 12
  * Rework promise chains for git and version modules
  * Fix issues in gulpfile when tests fail in continuous coverage mode
