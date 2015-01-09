@@ -11,7 +11,7 @@ function getBranch( path ) {
 			return branch.trim();
 		} )
 		.then( null, function() {
-			return 'nobranch';
+			return 'master';
 		} );
 }
 
@@ -45,13 +45,18 @@ function getRepository( path ) {
 	return exec( 'git remote show origin -n | grep \'Fetch URL: .*\'', path )
 		.then( function( line ) {
 			return regex.test( line ) ? regex.exec( line )[ 2 ] : 'norepo';
+		} )
+		.then( null, function() {
+			return syspath.basename( syspath.resolve( './' ) );
 		} );
 }
 
 function getRevisionListFor( filePath, path ) {
 	return exec( 'git log ' + filePath + ' | grep \'commit [^\\n]*\' | sed \'s_commit[ ]\\([^\\n]*\\)_\\1_\'', path )
 		.then( function( lines ) {
-			return _.where( lines.split( '\n' ), function( x ) { return x.length && /^[0-9a-zA-Z]*$/.test( x ); } );
+			return _.where( lines.split( '\n' ), function( x ) {
+				return x.length && /^[0-9a-zA-Z]*$/.test( x );
+			} );
 		} );
 }
 
@@ -64,7 +69,7 @@ function getVersionHistory( path ) {
 
 function getVersionHistoryFor( filePath, path ) {
 	var versionHash = {};
-	return getRevisionListFor( filePath, path )
+	return getRevisionListFor( path, path )
 		.then( function( commits ) {
 			return when.all( _.map( commits.reverse(), function( sha ) {
 				return getFileAtSha( sha, filePath, path )
@@ -72,25 +77,25 @@ function getVersionHistoryFor( filePath, path ) {
 						return { content: content, sha: sha };
 					} );
 			} ) )
-			.then( function( contents ) {
-				return _.map( contents, function( file ) {
-					var ver = version.getVersion( filePath, file.content );
-					return { sha: file.sha, version: ver };
+				.then( function( contents ) {
+					return _.map( contents, function( file ) {
+						var ver = version.getVersion( filePath, file.content );
+						return { sha: file.sha, version: ver };
+					} );
+				} )
+				.then( function( versions ) {
+					var results = _.map( versions, function( v ) {
+						var index = versionHash[ v.version ];
+						if ( index ) {
+							index++;
+						} else {
+							index = 1;
+						}
+						versionHash[ v.version ] = index;
+						return { sha: v.sha, version: v.version, build: index };
+					} );
+					return results;
 				} );
-			} )
-			.then( function( versions ) {
-				var results = _.map( versions, function( v ) {
-					var index = versionHash[ v.version ];
-					if( index ) {
-						index ++;
-					} else {
-						index = 1;
-					}
-					versionHash[ v.version ] = index;
-					return { sha: v.sha, version: v.version, build: index };
-				} );
-				return results;
-			} );
 		} );
 }
 

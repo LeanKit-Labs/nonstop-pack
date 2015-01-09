@@ -1,5 +1,9 @@
 ## 0.1.0
 
+### prerelease 14
+ * Use `master` as default branch value and directory for default repository name
+ * Fix defect causing only commits where versions changed to be included in commit history
+
 ### prerelease 13
 Fall back to placeholder/default values when a git repository doesn't exist to collect build information from.
 
