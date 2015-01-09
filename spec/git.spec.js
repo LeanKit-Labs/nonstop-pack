@@ -10,10 +10,6 @@ describe( 'when getting basic information', function() {
 			.then( function( info ) {
 				repoInfo = info;
 				done();
-			} )
-			.then( null, function( err ) {
-				console.log( 'boo', err );
-				done();
 			} );
 	} );
 
@@ -33,10 +29,6 @@ describe( 'when looking up version history', function() {
 		git.getVersionsFor( './package.json', './' )
 			.then( function( list ) {
 				versionHistory = list;
-				done();
-			} )
-			.then( null, function( err ) {
-				console.log( 'boo', err );
 				done();
 			} );
 	} );

@@ -1,21 +1,22 @@
-var vinyl = require( 'vinyl-fs' );
-var map = require( 'map-stream' );
 var semver = require( 'semver' );
 var when = require( 'when' );
-var whenNode = require( 'when/node' );
+var lift = require( 'when/node' ).lift;
 var pipeline = require( 'when/pipeline' );
 var path = require( 'path' );
 var fs = require( 'fs' );
 var mkdirp = require( 'mkdirp' );
 var _ = require( 'lodash' );
-var through = require( 'through2' );
 var archiver = require( 'archiver' );
 var zlib = require( 'zlib' );
 var tar = require( 'tar-fs' );
 var rimraf = require( 'rimraf' );
 var git = require( './git.js' );
-var debug = require( 'debug' )( 'package' );
+var debug = require( 'debug' )( 'nonstop:package' );
 var sysInfo = require( './sysInfo.js' )();
+var glob = require( 'globulesce' );
+var fs = require( 'fs' );
+var readdir = lift( fs.readdir );
+var stat = lift( fs.stat );
 
 function addPackage( root, packages, packageName ) {
 	var info = parsePackage( root, packageName );
@@ -43,33 +44,38 @@ function findPackage( packages, filter ) {
 
 function getInstalledVersion( filter, installed, ignored, noError ) {
 	var versions = [];
-	return when.promise( function( resolve, reject ) {
-		vinyl.src( '*', { cwd: installed } )
-			.pipe( map( function( f, cb ) {
-				if( !f._contents ) {
-					var version = path.basename( f.path );
-					if( !_.contains( ignored, version ) ) {
-						versions.push( version );
-					}
-				}
-				cb();
-			} ) )
-			.on( 'end', function() {
-				versions = _.filter( versions, function( v ) {
-					return filter.test( v );
-				} );
-				versions.sort( function( a, b ) {
-					return semver.rcompare( a, b );
-				} );
-				if( versions.length ) {
-					resolve( versions[ 0 ] );
-				} else if( noError ) {
-					resolve( undefined );
-				} else {
-					reject( undefined );
+	return readdir( installed )
+		.then( function( files ) {
+			var promises = _.map( files, function( file ) {
+				var relative = path.resolve( installed, file );
+				return { path: relative, stat: fs.statSync( relative ) };
+			} );
+			var directories = when.filter( promises, function( file ) {
+				return file.stat.isDirectory();
+			} );
+			return when.reduce( directories, function( x, y ) {
+				return x.concat( y.path );
+			}, [] );
+		} )
+		.then( function( directories ) {
+			var versions = _.map( directories, function( dir ) {
+				var version = path.basename( dir );
+				if( !_.contains( ignored, version ) ) {
+					return version;
 				}
 			} );
-	} );
+			var filtered = _.filter( versions, function( version ) {
+				return filter.test( version );
+			} );
+			filtered.sort( function( a, b ) {
+				return semver.rcompare( a, b );
+			} );
+			if( filtered.length ) {
+				return filtered[ 0 ];
+			} else {
+				return undefined;
+			}
+		} );
 }
 
 function getPackageInfo( projectName, config, repoInfo ) {
@@ -86,7 +92,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 				owner = info.owner;
 				branch = info.branch;
 				commit = info.commit;
-				projectPath = path.join( info.path, config.path );
+				projectPath = path.resolve( info.path, config.path );
 				repoPath = repoInfo;
 				return projectPath;
 			} );
@@ -94,17 +100,22 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		owner = repoInfo.owner;
 		branch = repoInfo.branch;
 		commit = repoInfo.commit;
-		projectPath = path.join( repoInfo.path, config.path );
+		projectPath = path.resolve( repoInfo.path, config.path );
 		repoPath = repoInfo.path;
 		repoPromise = when( projectPath );
 	}
 	var versionPromise = config.versionFile ? when.try( git.getVersionsFor, config.versionFile, repoPromise ) : when.try( git.getVersions, repoPromise );
 	return when.try( function( versions ) {
-		var last = versions[ versions.length - 1 ];
-		last = last || { version: '0.0.0', build: 0 };
+		var last;
+		if( versions && versions.length ) {
+			last = versions[ versions.length - 1 ];	
+		} else {
+			debug( 'No versions found for project "' + projectName + '" at ' + projectPath + '. Using \'0.0.0\'.' );
+			last = last || { version: '0.0.0', build: 0 };
+		}
 		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
-		var packagePath = path.join( './packages', packageName + '.tar.gz' );
-		return {
+		var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
+		var info = {
 			path: projectPath,
 			name: packageName,
 			output: packagePath,
@@ -113,8 +124,9 @@ function getPackageInfo( projectName, config, repoInfo ) {
 			commit: commit,
 			owner: owner,
 			version: last.version,
-			pattern: config.pack.pattern,
+			pattern: config.pack ? config.pack.pattern : undefined,
 		};
+		return info;
 	}, versionPromise );
 }
 
@@ -124,51 +136,47 @@ function getPackageVersion( file ) {
 }
 
 function pack( pattern, workingPath, target ) {
+	pattern = pattern || '';
 	return when.promise( function( resolve, reject ) {
 		mkdirp.sync( path.dirname( target ) );
-		var files = [];
+		var archivedFiles = [];
 		var patterns = _.isArray( pattern ) ? pattern : pattern.split( ',' );
-		var output = fs.createWriteStream( target );
-		var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
+		return glob( workingPath, patterns, [ '.git' ] )
+			.then( function( files ) {
+				if( _.isEmpty( files ) ) {
+					reject( new Error( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' ) );	
+				} else {
+					var output = fs.createWriteStream( target );
+					var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
 
-		output.on( 'close', function() {
-			resolve( files );
-		} );
-
-		archive.on( 'error', function( err ) {
-			reject( err );
-		} );
-
-		archive.pipe( output );
-
-		var packWrap = through.obj( function( chunk, enc, callback ) {
-			files.push( chunk.path );
-			if( chunk._contents === null ) {
-				callback();
-			} else {
-				archive.append( chunk._contents, { name: path.relative( workingPath, chunk.path ) } );
-				callback();
-			}
-		}, function( cb ) {
-			archive.finalize();
-			cb( null );
-		} );
-
-		vinyl.src( patterns, { cwd: workingPath } )
-			.on( 'finish', function() {
-				if( files.length === 0 ) {
-					reject( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' );
+					output.on( 'close', function() {
+						resolve( archivedFiles );
+					} );
+					archive.on( 'error', function( err ) {
+						reject( err );
+					} );
+					archive.pipe( output );
+					
+					_.map( files, function( file ) {
+						archivedFiles.push( file );
+						archive.file( file, { name: path.relative( workingPath, file ) } );
+					} );
+					archive.finalize();
 				}
 			} )
-			.pipe( packWrap );
+			.then( null, function( err ) {
+				reject( err );
+			} );
 	} );
 }
 
-function parsePackage( root, packageName ) {
+function parsePackage( root, packageName, directory ) {
 	var parts = packageName.split( '~' );
 	var relative = [ parts[ 0 ], parts[ 1 ], parts[ 2 ] ].join( '-' );
 	return {
-		directory: path.join( root, relative ),
+		directory: path.resolve( root, relative ),
+		path: directory,
+		fullPath: path.resolve( directory || root, packageName ),
 		project: parts[ 0 ],
 		owner: parts[ 1 ],
 		branch: parts[ 2 ],
@@ -184,23 +192,24 @@ function parsePackage( root, packageName ) {
 }
 
 function processPackage( root, packageFile, cb ) {
-	var file = path.basename( packageFile.path );
-	var info = parsePackage( root, file );
-	cb( null, info );
+	var file = path.basename( packageFile );
+	var dir = path.dirname( packageFile );
+	var info = parsePackage( root, file, dir );
+	if( cb ) {
+		cb( null, info );
+	} else {
+		return info;
+	}
 }
 
 function scanPackages( root ) {
-	var list = [];
-	var add = processPackage.bind( null, root );
-	return when.promise( function( resolve, reject ) {
-		vinyl.src( '**/*.tar.gz', { cwd: root, read: false } )
-			.pipe( map( add ) )
-			.on( 'data', list.push.bind( list ) )
-			.on( 'error', reject )
-			.on( 'end', function() {
-				resolve( list );
+	return glob( root, '**/*.tar.gz' )
+		.then( function( files ) {
+			var stuff = _.map( files, function( file ) {
+				return processPackage( root, file );
 			} );
-	} );
+			return stuff;
+		} );
 }
 
 function termList( packages ) {
@@ -220,31 +229,34 @@ function unpack( artifact, target ) {
 	var file = path.basename( artifact );
 	var version = getPackageVersion( file );
 	return when.promise( function( resolve, reject ) {
-		fs.createReadStream( artifact )
-			.pipe( zlib.createUnzip() )
-			.pipe( tar.extract( target ) )
-			.on( 'error', function ( err ) {
-				rimraf( path.resolve( target ), function( err ) {
-					if( err ) {
-						console.log( 'Could not delete failed install at', target, err.stack );
-					}
+		if( fs.existsSync( artifact ) ) {
+			mkdirp.sync( target );
+			fs.createReadStream( artifact )
+				.pipe( zlib.createUnzip() )
+				.pipe( tar.extract( target ) )
+				.on( 'error', function ( err ) {
+					rimraf( path.resolve( target ), function( err ) {
+						if( err ) {
+							console.log( 'Could not delete failed install at', target, err.stack );
+						}
+					} );
+					reject( err );
+				} )
+				.on( 'finish', function() {
+					resolve( version );
 				} );
-				reject( err );
-			} )
-			.on( 'finish', function() {
-				resolve( version );
-			} );
+		} else {
+			reject( new Error( 'The artifact file "' + artifact + '" could not be found.' ) );
+		}
 	} );
 }
 
 function uploadPackage( root, tmp, packageName, packages ) {
 	var info = addPackage( root, packages, packageName );
-	var destination = path.join( info.directory, packageName );
+	var destination = path.resolve( info.directory, packageName );
 	mkdirp.sync( info.directory );
-	return pipeline( [ 
-		whenNode.lift( fs.rename ).bind( fs )( tmp, destination ),
-		whenNode.lift( fs.unlink ).bind( fs )( tmp )
-	] );
+	var rename = lift( fs.rename );
+	return rename( tmp, destination );
 }
 
 module.exports = {

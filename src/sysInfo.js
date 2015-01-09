@@ -5,15 +5,11 @@ var config = require( './config.js' );
 
 function getIP() {
 	var names = [ 'eth0', 'eth1', 'eth2', 'eth3', 'eth4', 'en0', 'en1', 'en2', 'en3', 'en4', 'Ethernet', 'Ethernet 1', 'Ethernet 2', 'Ethernet 3', 'Ethernet 4' ];
-	var interfaces = os.networkInterfaces();
-	var index = _.findIndex( names, function( name ) {
-			var interface = interfaces[ name ];
-			return interface != undefined && interface.length > 0; //jshint ignore:line
-		} );
-	var primary = interfaces[ names[ index ] ];
-	var IPv4 = _.find( primary, function( address ) {
-					return address.family == 'IPv4';
-				} );
+	var interfaces = _.pick( os.networkInterfaces(), names );
+	var addresses = _.reduce( interfaces, function( acc, list ) {
+		return acc.concat( list );
+	}, [] );
+	var IPv4 = _.where( addresses, { family: 'IPv4' } )[ 0 ];
 	return IPv4.address;
 }
 

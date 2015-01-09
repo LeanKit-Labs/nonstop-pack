@@ -1,10 +1,11 @@
 {
   "name": "nonstop-pack",
-  "version": "0.1.0-4",
+  "version": "0.1.0-14",
   "description": "Lib for working with nonstop packages",
   "main": "src/package.js",
   "scripts": {
-    "test": "gulp test"
+    "test": "gulp test",
+    "coverage": "gulp coverage"
   },
   "repository": {
     "type": "git",
@@ -24,21 +25,21 @@
   "homepage": "https://github.com/LeanKit-Labs/nonstop-pack",
   "devDependencies": {
     "gulp": "^3.8.7",
+    "gulp-istanbul": "^0.5.0",
     "gulp-mocha": "^1.0.0",
+    "open": "0.0.5",
     "should": "^4.0.4"
   },
   "dependencies": {
     "archiver": "^0.11.0",
     "configya": "^0.1.0",
     "debug": "^2.0.0",
+    "globulesce": "^0.1.4",
     "lodash": "^2.4.1",
-    "map-stream": "^0.1.0",
     "mkdirp": "^0.5.0",
     "rimraf": "^2.2.8",
     "semver": "^3.0.1",
     "tar-fs": "^0.5.0",
-    "through2": "^0.6.1",
-    "vinyl-fs": "^0.3.7",
     "when": "^3.4.5"
   }
 }
