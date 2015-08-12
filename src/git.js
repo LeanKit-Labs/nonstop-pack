@@ -6,13 +6,17 @@ var version = require( './version.js' );
 var syspath = require( 'path' );
 
 function getBranch( path ) {
-	return exec( 'git rev-parse --abbrev-ref HEAD', path )
-		.then( function( branch ) {
-			return branch.trim();
-		} )
-		.then( null, function() {
-			return 'master';
-		} );
+	if( process.env.DRONE ) {
+		return when.resolve( process.env.DRONE_BRANCH );
+	} else {
+		return exec( 'git rev-parse --abbrev-ref HEAD', path )
+			.then( function( branch ) {
+				return branch.trim();
+			} )
+			.then( null, function() {
+				return 'master';
+			} );
+	}
 }
 
 function getCommit( path ) {

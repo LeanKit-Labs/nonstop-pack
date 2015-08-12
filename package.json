@@ -1,6 +1,6 @@
 {
   "name": "nonstop-pack",
-  "version": "0.1.0-14",
+  "version": "0.1.1",
   "description": "Lib for working with nonstop packages",
   "main": "src/package.js",
   "scripts": {
@@ -17,8 +17,17 @@
     "cd",
     "package"
   ],
-  "author": "Alex Robson",
-  "license": "MIT License",
+  "author": "LeanKit",
+  "contributors": [
+    {
+      "name": "Alex Robson",
+      "url": "http://nerdventure.io"
+    }
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "bugs": {
     "url": "https://github.com/LeanKit-Labs/nonstop-pack/issues"
   },

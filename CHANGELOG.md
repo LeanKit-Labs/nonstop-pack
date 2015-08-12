@@ -1,4 +1,11 @@
-## 0.1.0
+## 0.1.*
+
+### 0.1.1
+
+* Add support for detecting when packing is happening in Drone to get the branch name from the env
+* Remove attempt to get IP from sysinfo module (never used)
+
+### 0.1.0
 
 ### prerelease 14
  * Use `master` as default branch value and directory for default repository name
