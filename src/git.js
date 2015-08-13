@@ -30,7 +30,8 @@ function getCommit( path ) {
 }
 
 function getFileAtSha( sha, filePath, path ) {
-	return exec( 'git show ' + sha + ':' + filePath + ' | cat', path )
+	var relativePath = syspath.relative( path, filePath );
+	return exec( 'git show ' + sha + ':' + relativePath + ' | cat', path )
 		.then( null, function() {
 			return '';
 		} );
