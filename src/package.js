@@ -15,6 +15,7 @@ var debug = require( 'debug' )( 'nonstop:package' );
 var sysInfo = require( './sysInfo.js' )();
 var glob = require( 'globulesce' );
 var fs = require( 'fs' );
+var mv = require( 'mv' );
 var readdir = lift( fs.readdir );
 var stat = lift( fs.stat );
 
@@ -108,7 +109,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 	return when.try( function( versions ) {
 		var last;
 		if( versions && versions.length ) {
-			last = versions[ versions.length - 1 ];	
+			last = versions[ versions.length - 1 ];
 		} else {
 			debug( 'No versions found for project "' + projectName + '" at ' + projectPath + '. Using \'0.0.0\'.' );
 			last = last || { version: '0.0.0', build: 0 };
@@ -144,7 +145,7 @@ function pack( pattern, workingPath, target ) {
 		return glob( workingPath, patterns, [ '.git' ] )
 			.then( function( files ) {
 				if( _.isEmpty( files ) ) {
-					reject( new Error( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' ) );	
+					reject( new Error( 'No files matched the pattern "' + pattern + '" in path "' + workingPath + '". No package was generated.' ) );
 				} else {
 					var output = fs.createWriteStream( target );
 					var archive = archiver( 'tar', { gzip: true, gzipOptions: { level: 9 } } );
@@ -156,7 +157,7 @@ function pack( pattern, workingPath, target ) {
 						reject( err );
 					} );
 					archive.pipe( output );
-					
+
 					_.map( files, function( file ) {
 						archivedFiles.push( file );
 						archive.file( file, { name: path.relative( workingPath, file ) } );
@@ -213,15 +214,15 @@ function scanPackages( root ) {
 }
 
 function termList( packages ) {
-	return _.uniq( _.flatten( _.map( packages, function( record ) { 
+	return _.uniq( _.flatten( _.map( packages, function( record ) {
 			var list = _.pairs( _.omit( record, 'directory', 'relative', 'file' ) ).reverse();
-			return _.map( list, function( pair ) { 
+			return _.map( list, function( pair ) {
 				var reversal = {};
-				reversal[ pair[ 1 ] ] = pair[ 0 ]; 
-				return reversal; 
-			} ); 
-		} ) ), 
-		function( pair ) { return _.keys( pair )[ 0 ]; } 
+				reversal[ pair[ 1 ] ] = pair[ 0 ];
+				return reversal;
+			} );
+		} ) ),
+		function( pair ) { return _.keys( pair )[ 0 ]; }
 	);
 }
 
@@ -255,8 +256,8 @@ function uploadPackage( root, tmp, packageName, packages ) {
 	var info = addPackage( root, packages, packageName );
 	var destination = path.resolve( info.directory, packageName );
 	mkdirp.sync( info.directory );
-	var rename = lift( fs.rename );
-	return rename( tmp, destination );
+	var move = lift( mv );
+	return move( tmp, destination, { clobber: true } );
 }
 
 module.exports = {

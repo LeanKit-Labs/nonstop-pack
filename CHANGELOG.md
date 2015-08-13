@@ -1,5 +1,9 @@
 ## 0.1.*
 
+### 0.1.2
+
+Change upload from fs.rename to use `mv` module to support copying between volumes (for use with nonstop-index inside a Docker container with mounted volumes ... who knew?)
+
 ### 0.1.1
 
 * Add support for detecting when packing is happening in Drone to get the branch name from the env
