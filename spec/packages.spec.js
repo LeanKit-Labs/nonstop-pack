@@ -466,7 +466,7 @@ describe( 'Package', function() {
 		describe( 'with temp file', function() {
 			var packages = [];
 			before( function( done ) {
-
+				mkdirp.sync( './spec/uploads' );
 				package.copy(
 					'./spec/uploads',
 					'./spec/891345iaghakk92thagk.tar.gz',
@@ -478,7 +478,9 @@ describe( 'Package', function() {
 			} );
 
 			it( 'should copy file to the correct location', function() {
-				fs.existsSync( './spec/uploads/test-arobson-master/test~arobson~master~0.1.0~1~darwin~any~any~x64' ).should.be.true;
+				fs.existsSync(
+					path.resolve( './spec/uploads/test-arobson-master/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' )
+				).should.be.true;
 			} );
 
 			it( 'should add valid package information to package list', function() {
@@ -488,7 +490,7 @@ describe( 'Package', function() {
 					build: '1',
 					directory: path.resolve( './spec/uploads/test-arobson-master' ),
 					file: 'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
-					fullPath: path.resolve( './spec/uploads/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' ),
+					fullPath: path.resolve( './spec/uploads/test-arobson-master/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz' ),
 					osName: 'any',
 					osVersion: 'any',
 					owner: 'arobson',
@@ -501,9 +503,42 @@ describe( 'Package', function() {
 				} );
 			} );
 
+			describe( 'when promoting package', function() {
+				before( function() {
+					return package.promote( './spec/uploads', packages[ 0 ], packages );
+				} );
+
+				it( 'should copy original as release version', function() {
+					fs.existsSync( './spec/uploads/test-arobson-master/test~arobson~master~0.1.0~~darwin~any~any~x64.tar.gz' ).should.be.true;
+				} );
+
+				it( 'should add valid package information to package list', function() {
+					packages[ 1 ].should.eql( {
+						architecture: 'x64',
+						branch: 'master',
+						build: '',
+						directory: path.resolve( './spec/uploads/test-arobson-master' ),
+						file: 'test~arobson~master~0.1.0~~darwin~any~any~x64.tar.gz',
+						fullPath: path.resolve( './spec/uploads/test-arobson-master/test~arobson~master~0.1.0~~darwin~any~any~x64.tar.gz' ),
+						osName: 'any',
+						osVersion: 'any',
+						owner: 'arobson',
+						path: undefined,
+						platform: 'darwin',
+						project: 'test',
+						relative: 'test-arobson-master',
+						slug: undefined,
+						version: '0.1.0'
+					} );
+				} );
+			} );
+
 			after( function( done ) {
 				rimraf( './spec/installed/proj1-owner1-branch2', function() {
 					done();
+					rimraf( './spec/uploads/test-arobson-master', function() {
+						done();
+					} );
 				} );
 			} );
 		} );

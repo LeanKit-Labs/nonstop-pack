@@ -1,5 +1,8 @@
 ## 0.1.*
 
+### 0.1.5
+Add package promotion support.
+
 ### 0.1.4
 
  * Support retrieval of all installed versions

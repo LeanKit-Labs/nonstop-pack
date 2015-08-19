@@ -16,6 +16,7 @@ var sysInfo = require( './sysInfo.js' )();
 var glob = require( 'globulesce' );
 var fs = require( 'fs' );
 var mv = require( 'mv' );
+var cp = require( 'cp' );
 var readdir = lift( fs.readdir );
 var stat = lift( fs.stat );
 
@@ -189,20 +190,22 @@ function pack( pattern, workingPath, target ) {
 function parsePackage( root, packageName, directory ) {
 	var parts = packageName.split( '~' );
 	var relative = [ parts[ 0 ], parts[ 1 ], parts[ 2 ] ].join( '-' );
-	var slug, offset = 0;
+	var base = path.resolve( root, relative );
+	var slug;
+	var offset = 0;
 	if( /[a-fA-F0-9]{8}/.test( parts[ 3 ] ) ) {
 		slug = parts[ 3 ];
 		offset = 1;
 	}
 	return {
-		directory: path.resolve( root, relative ),
+		directory: directory || base,
 		path: directory,
-		fullPath: path.resolve( directory || root, packageName ),
+		fullPath: path.resolve( directory || base, packageName ),
 		project: parts[ 0 ],
 		owner: parts[ 1 ],
 		branch: parts[ 2 ],
 		slug: slug,
-		version: [ parts[ 3 + offset ], parts[ 4 + offset ] ].join( '-' ),
+		version: _.filter( [ parts[ 3 + offset ], parts[ 4 + offset ] ] ).join( '-' ),
 		build: parts[ 4 + offset ],
 		platform: parts[ 5 + offset ],
 		osName: parts[ 6 + offset ],
@@ -275,6 +278,30 @@ function unpack( artifact, target ) {
 	} );
 }
 
+function promotePackage( root, info, packages ) {
+	var relative = [ info.project, info.owner, info.branch ].join( '-' );
+	var packageName = _.filter( [
+		info.project,
+		info.owner,
+		info.branch,
+		info.slug,
+		info.version.split( '-' )[ 0 ],
+		'',
+		info.platform,
+		info.osName,
+		info.osVersion,
+		info.architecture ],
+		function( x ) { return x !== undefined; } )
+	.join( '~' ) + '.tar.gz';
+	var packageInfo = _.clone( info );
+	packageInfo.file = packageName;
+	packageInfo.fullPath = path.join( info.directory, packageName );
+	packageInfo.build = '';
+	addPackage( root, packages, packageName );
+	var copy = lift( cp );
+	return copy( info.fullPath, packageInfo.fullPath );
+}
+
 function uploadPackage( root, tmp, packageName, packages ) {
 	var info = addPackage( root, packages, packageName );
 	var destination = path.resolve( info.directory, packageName );
@@ -295,6 +322,7 @@ module.exports = {
 	getPackageVersion: getPackageVersion,
 	pack: pack,
 	parse: parsePackage,
+	promote: promotePackage,
 	terms: termList,
 	unpack: unpack
 };
