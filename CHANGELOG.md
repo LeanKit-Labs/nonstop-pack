@@ -1,5 +1,10 @@
 ## 0.1.*
 
+### 0.1.4
+
+ * Support retrieval of all installed versions
+ * Add commit slug to package file
+
 ### 0.1.3
 
 Bug fix - reading a file at sha should use relative path (affects version detection and build number).

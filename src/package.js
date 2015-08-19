@@ -90,6 +90,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 	var owner;
 	var branch;
 	var commit;
+	var slug;
 	var repoPath;
 	var projectPath;
 	var repoPromise;
@@ -100,6 +101,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 				owner = info.owner;
 				branch = info.branch;
 				commit = info.commit;
+				slug = info.slug;
 				projectPath = path.resolve( info.path, config.path );
 				repoPath = repoInfo;
 				return projectPath;
@@ -108,6 +110,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		owner = repoInfo.owner;
 		branch = repoInfo.branch;
 		commit = repoInfo.commit;
+		slug = repoInfo.slug;
 		projectPath = path.resolve( repoInfo.path, config.path );
 		repoPath = repoInfo.path;
 		repoPromise = when( projectPath );
@@ -121,7 +124,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 			debug( 'No versions found for project "' + projectName + '" at ' + projectPath + '. Using \'0.0.0\'.' );
 			last = last || { version: '0.0.0', build: 0 };
 		}
-		var packageName = [ projectName, owner, branch, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ].join( '~' );
+		var packageName = _.filter( [ projectName, owner, branch, slug, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ] ).join( '~' );
 		var packagePath = path.resolve( './packages', packageName + '.tar.gz' );
 		var info = {
 			path: projectPath,
@@ -130,6 +133,7 @@ function getPackageInfo( projectName, config, repoInfo ) {
 			build: last.build,
 			branch: branch,
 			commit: commit,
+			slug: slug,
 			owner: owner,
 			version: last.version,
 			pattern: config.pack ? config.pack.pattern : undefined,
@@ -140,7 +144,11 @@ function getPackageInfo( projectName, config, repoInfo ) {
 
 function getPackageVersion( file ) {
 	var parts = file.split( '~' );
-	return parts[ 4 ] ? [ parts[ 3 ], parts[ 4 ] ].join( '-' ) : parts[ 3 ];
+	if( /[a-fA-F0-9]{8}/.test( parts[ 3 ] ) ) {
+		return parts[ 5 ] ? [ parts[ 4 ], parts[ 5 ] ].join( '-' ) : parts[ 4 ];
+	} else {
+		return parts[ 4 ] ? [ parts[ 3 ], parts[ 4 ] ].join( '-' ) : parts[ 3 ];
+	}
 }
 
 function pack( pattern, workingPath, target ) {
@@ -181,6 +189,11 @@ function pack( pattern, workingPath, target ) {
 function parsePackage( root, packageName, directory ) {
 	var parts = packageName.split( '~' );
 	var relative = [ parts[ 0 ], parts[ 1 ], parts[ 2 ] ].join( '-' );
+	var slug, offset = 0;
+	if( /[a-fA-F0-9]{8}/.test( parts[ 3 ] ) ) {
+		slug = parts[ 3 ];
+		offset = 1;
+	}
 	return {
 		directory: path.resolve( root, relative ),
 		path: directory,
@@ -188,12 +201,13 @@ function parsePackage( root, packageName, directory ) {
 		project: parts[ 0 ],
 		owner: parts[ 1 ],
 		branch: parts[ 2 ],
-		version: [ parts[ 3 ], parts[ 4 ] ].join( '-' ),
-		build: parts[ 4 ],
-		platform: parts[ 5 ],
-		osName: parts[ 6 ],
-		osVersion: parts[ 7 ],
-		architecture: parts[ 8 ].replace( '.tar.gz', '' ),
+		slug: slug,
+		version: [ parts[ 3 + offset ], parts[ 4 + offset ] ].join( '-' ),
+		build: parts[ 4 + offset ],
+		platform: parts[ 5 + offset ],
+		osName: parts[ 6 + offset ],
+		osVersion: parts[ 7 + offset ],
+		architecture: parts[ 8 + offset ].replace( '.tar.gz', '' ),
 		relative: relative,
 		file: packageName
 	};
@@ -223,11 +237,13 @@ function scanPackages( root ) {
 function termList( packages ) {
 	return _.uniq( _.flatten( _.map( packages, function( record ) {
 			var list = _.pairs( _.omit( record, 'directory', 'relative', 'file' ) ).reverse();
-			return _.map( list, function( pair ) {
+			return _.filter( _.map( list, function( pair ) {
 				var reversal = {};
-				reversal[ pair[ 1 ] ] = pair[ 0 ];
-				return reversal;
-			} );
+				if( pair[ 1 ] !== undefined ) {
+					reversal[ pair[ 1 ] ] = pair[ 0 ];
+					return reversal;
+				}
+			} ) );
 		} ) ),
 		function( pair ) { return _.keys( pair )[ 0 ]; }
 	);

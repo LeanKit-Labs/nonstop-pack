@@ -1,6 +1,5 @@
 var _ = require( 'lodash' );
 var when = require( 'when' );
-var pipe = require( 'when/pipeline' );
 var exec = require( './command.js' );
 var version = require( './version.js' );
 var syspath = require( 'path' );
@@ -65,6 +64,13 @@ function getRevisionListFor( filePath, path ) {
 		} );
 }
 
+function getSlug( path ) {
+	return getCommit( path )
+		.then( function( sha ) {
+			return sha.slice( 0, 8 );
+		} );
+}
+
 function getVersionHistory( path ) {
 	return version.getFile( path )
 		.then( function( file ) {
@@ -108,6 +114,7 @@ function createInfo( path, branch, commit, owner, repo ) {
 	return {
 		branch: branch,
 		commit: commit,
+		slug: commit.slice( 0, 8 ),
 		owner: owner,
 		path: syspath.resolve( path ),
 		repository: repo
@@ -120,6 +127,8 @@ function readRepository( path ) {
 
 module.exports = {
 	commitsFor: getRevisionListFor,
+	getCommit: getCommit,
+	getSlug: getSlug,
 	getVersion: getFileAtSha,
 	getVersions: getVersionHistory,
 	getVersionsFor: getVersionHistoryFor,
