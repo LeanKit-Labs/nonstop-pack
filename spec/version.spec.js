@@ -1,12 +1,12 @@
-require( 'should' );
+require( './setup' );
 var seq = require( 'when/sequence' );
 var version = require( '../src/version.js' );
 
 describe( 'should find correct version file', function() {
 	var dotnetVersion, erlangVersion, nodeVersion;
-	var getFile = function( relativePath ) { 
-		return function() { 
-			return version.getFile( relativePath ); 
+	var getFile = function( relativePath ) {
+		return function() {
+			return version.getFile( relativePath );
 		};
 	};
 	var getVersion = function( versionFile ) {

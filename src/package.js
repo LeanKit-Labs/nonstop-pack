@@ -43,7 +43,7 @@ function findPackage( packages, filter ) {
 	} );
 }
 
-function getInstalledVersion( filter, installed, ignored, noError ) {
+function getInstalledVersions( filter, installed, ignored, noError ) {
 	var versions = [];
 	return readdir( installed )
 		.then( function( files ) {
@@ -72,10 +72,17 @@ function getInstalledVersion( filter, installed, ignored, noError ) {
 				return semver.rcompare( a, b );
 			} );
 			if( filtered.length ) {
-				return filtered[ 0 ];
+				return filtered;
 			} else {
 				return undefined;
 			}
+		} );
+}
+
+function getInstalledVersion( filter, installed, ignored, noError ) {
+	return getInstalledVersions( filter, installed, ignored, noError )
+		.then( function( versions ) {
+			return versions ? versions[ 0 ] : undefined;
 		} );
 }
 
@@ -267,6 +274,7 @@ module.exports = {
 	find: findPackage,
 	getInfo: getPackageInfo,
 	getInstalled: getInstalledVersion,
+	getInstalledVersions: getInstalledVersions,
 	getList: scanPackages,
 	getPackageVersion: getPackageVersion,
 	pack: pack,

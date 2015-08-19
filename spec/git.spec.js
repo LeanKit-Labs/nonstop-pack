@@ -1,4 +1,4 @@
-require( 'should' );
+require( './setup' );
 var path = require( 'path' );
 var git = require( '../src/git.js' );
 

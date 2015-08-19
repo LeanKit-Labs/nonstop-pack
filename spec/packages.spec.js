@@ -1,4 +1,7 @@
-var should = require( 'should' );
+var chai = require( 'chai' );
+var should = chai.should();
+chai.use( require( 'chai-as-promised' ) );
+
 var _ = require( 'lodash' );
 var package = require( '../src/package.js' );
 var mkdirp = require( 'mkdirp' );
@@ -32,22 +35,19 @@ describe( 'Package', function() {
 			} );
 
 			it( 'should resolve to undefined', function() {
-				should( result ).not.exist;
+				should.not.exist( result );
 			} );
 		} );
 
 		describe( 'with installed packages', function() {
-			var result;
-			before( function( done ) {
-				package.getInstalled( /.*/, './spec/installed/projects/proj1-owner1-branch1' )
-					.then( function( version ) {
-						result = version;
-						done();
-					} );
+			it( 'should return the latest version', function() {
+				return package.getInstalled( /.*/, './spec/installed/projects/proj1-owner1-branch1' )
+					.should.eventually.equal( '0.0.2-1' );
 			} );
 
-			it( 'should return the latest version', function() {
-				result.should.equal( '0.0.2-1' );
+			it( 'should return a list', function() {
+				return package.getInstalledVersions( /.*/, './spec/installed/projects/proj1-owner1-branch1' )
+					.should.eventually.eql( [ '0.0.2-1', '0.0.1' ] );
 			} );
 		} );
 	} );
@@ -217,7 +217,7 @@ describe( 'Package', function() {
 			var error;
 			before( function( done ) {
 				this.timeout( 5000 );
-				package.getInfo( 'test', { 
+				package.getInfo( 'test', {
 					path: './farts',
 					pack: {
 						pattern: '/durp/**'
@@ -227,7 +227,7 @@ describe( 'Package', function() {
 					done();
 				} );
 			} );
-			
+
 			it( 'should report error', function() {
 				error.toString().should.equal( 'Error: Cannot search for version files in bad path "/git/labs/nonstop/nonstop-pack/farts"' );
 			} );
@@ -237,7 +237,7 @@ describe( 'Package', function() {
 			var error, info;
 			before( function( done ) {
 				this.timeout( 5000 );
-				package.getInfo( 'test', { 
+				package.getInfo( 'test', {
 					path: './',
 					pack: {
 						pattern: '/durp/**'
@@ -250,7 +250,7 @@ describe( 'Package', function() {
 
 			it( 'should retrieve correct information', function() {
 				// omit file list and values that change due to commits in the repo
-				_.omit( info, 'files', 'build', 'commit', 'output', 'version', 'name' ).should.eql( 
+				_.omit( info, 'files', 'build', 'commit', 'output', 'version', 'name' ).should.eql(
 					{
 						branch: 'master',
 						owner: 'arobson',
@@ -259,7 +259,7 @@ describe( 'Package', function() {
 					} );
 			} );
 
-			describe( 'when creating package from info', function() {			
+			describe( 'when creating package from info', function() {
 				before( function( done ) {
 					package.create( info )
 						.then( null, function( err ) {
@@ -281,9 +281,9 @@ describe( 'Package', function() {
 		describe( 'with valid package information', function() {
 			var info;
 			before( function( done ) {
-				package.getInfo( 'test', { 
+				package.getInfo( 'test', {
 					path: './',
-					pack: { 
+					pack: {
 						pattern: './src/**/*,./node_modules/**/*'
 					} }, './' )
 				.then( function( result ) {
@@ -294,7 +294,7 @@ describe( 'Package', function() {
 
 			it( 'should retrieve correct information', function() {
 				// omit file list and values that change due to commits in the repo
-				_.omit( info, 'files', 'build', 'commit', 'output', 'version', 'name' ).should.eql( 
+				_.omit( info, 'files', 'build', 'commit', 'output', 'version', 'name' ).should.eql(
 					{
 						branch: 'master',
 						owner: 'arobson',
@@ -303,7 +303,7 @@ describe( 'Package', function() {
 					} );
 			} );
 
-			describe( 'when creating package from info', function() {			
+			describe( 'when creating package from info', function() {
 				before( function( done ) {
 					this.timeout( 5000 );
 					package.create( info )
@@ -332,10 +332,10 @@ describe( 'Package', function() {
 			var json = JSON.parse( text );
 			version = json.version.split( '-' )[ 0 ];
 
-			package.getInfo( 'test', { 
-				path: './', 
+			package.getInfo( 'test', {
+				path: './',
 				versionFile: './package.json',
-				pack: { 
+				pack: {
 					pattern: './src/**/*,./node_modules/**/*'
 				} }, './' )
 			.then( function( result ) {
@@ -346,7 +346,7 @@ describe( 'Package', function() {
 
 		it( 'should retrieve correct information', function() {
 			// omit file list and values that change due to commits in the repo
-			_.omit( info, 'files', 'build', 'commit', 'output', 'name' ).should.eql( 
+			_.omit( info, 'files', 'build', 'commit', 'output', 'name' ).should.eql(
 				{
 					branch: 'master',
 					owner: 'arobson',
@@ -362,7 +362,7 @@ describe( 'Package', function() {
 		describe( 'with valid package', function() {
 			var result;
 			before( function( done ) {
-				package.unpack( 
+				package.unpack(
 					'./spec/files/proj1-owner1-branch2/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
 					'./spec/installed/proj1-owner1-branch2/0.0.2-1' )
 					.then( function( version ) {
@@ -389,7 +389,7 @@ describe( 'Package', function() {
 		describe( 'with missing package', function() {
 			var result;
 			before( function( done ) {
-				package.unpack( 
+				package.unpack(
 					'./spec/files/proj1-owner1-branch1/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
 					'./spec/installed/proj1-owner1-branch2/0.0.2-1' )
 					.then( null, function( err ) {
@@ -420,11 +420,11 @@ describe( 'Package', function() {
 			before( function( done ) {
 
 				package.copy(
-					'./spec/uploads', 
+					'./spec/uploads',
 					'./spec/891345iaghakk92thagk.tar.gz',
 					'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
 					packages
-				).then( function() { 
+				).then( function() {
 					done();
 				} );
 			} );
