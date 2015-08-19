@@ -51,6 +51,18 @@ describe( 'Package', function() {
 					.should.eventually.eql( [ '0.0.2-1', '0.0.1' ] );
 			} );
 		} );
+
+		describe( 'with installed release', function() {
+			it( 'should return the latest version', function() {
+				return package.getInstalled( /.*/, './spec/installed/projects/proj2-owner2-branch2' )
+					.should.eventually.equal( '0.1.0' );
+			} );
+
+			it( 'should return a list', function() {
+				return package.getInstalledVersions( /.*/, './spec/installed/projects/proj2-owner2-branch2' )
+					.should.eventually.eql( [ '0.1.0', '0.1.0-2', '0.1.0-1' ] );
+			} );
+		} );
 	} );
 
 	describe( 'when getting list of packages', function() {
