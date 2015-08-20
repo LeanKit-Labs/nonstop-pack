@@ -396,6 +396,30 @@ describe( 'Package', function() {
 				fs.existsSync( './spec/installed/proj1-owner1-branch2/0.0.2-1' ).should.be.true;
 			} );
 
+			it( 'should write info file to extracted folder', function() {
+				fs.existsSync( './spec/installed/proj1-owner1-branch2/0.0.2-1/.nonstop-info.json' ).should.be.true;
+			} );
+
+			it( 'should write info contents to info file', function() {
+				JSON.parse( fs.readFileSync( './spec/installed/proj1-owner1-branch2/0.0.2-1/.nonstop-info.json' ).toString() )
+					.should.eql( {
+						architecture: 'x64',
+						branch: 'branch2',
+						build: '1',
+						directory: '/git/labs/nonstop/nonstop-pack/proj1-owner1-branch2',
+						file: 'proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
+						fullPath: '/git/labs/nonstop/nonstop-pack/proj1-owner1-branch2/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
+						osName: 'OSX',
+						osVersion: '10.9.2',
+						owner: 'owner1',
+						platform: 'darwin',
+						project: 'proj1',
+						relative: 'proj1-owner1-branch2',
+						version: '0.0.2-1'
+
+					} );
+			} );
+
 			it( 'should resolve with installed version', function() {
 				result.should.equal( '0.0.2-1' );
 			} );
