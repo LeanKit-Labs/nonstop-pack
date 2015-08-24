@@ -367,11 +367,10 @@ describe( 'Package', function() {
 
 		it( 'should retrieve correct information', function() {
 			// omit file list and values that change due to commits in the repo
-			_.omit( info, 'files', 'build', 'commit', 'slug', 'output', 'name' ).should.eql(
+			_.omit( info, 'files', 'build', 'commit', 'slug', 'output', 'name', 'version' ).should.eql(
 				{
 					branch: 'master',
 					owner: 'arobson',
-					version: version,
 					pattern: './src/**/*,./node_modules/**/*',
 					path: '/git/labs/nonstop/nonstop-pack'
 				} );

@@ -281,25 +281,12 @@ function unpack( artifact, target ) {
 }
 
 function promotePackage( root, info, packages ) {
-	var relative = [ info.project, info.owner, info.branch ].join( "-" );
-	var packageName = _.filter( [
-		info.project,
-		info.owner,
-		info.branch,
-		info.slug,
-		info.version.split( "-" )[ 0 ],
-		"",
-		info.platform,
-		info.osName,
-		info.osVersion,
-		info.architecture ],
-		function( x ) { return x !== undefined; } )
-	.join( "~" ) + ".tar.gz";
 	var packageInfo = _.clone( info );
-	packageInfo.file = packageName;
-	packageInfo.fullPath = path.join( info.directory, packageName );
+	packageInfo.file = packageInfo.file.replace( /([0-9][.][0-9][.][0-9])[~][0-9]{1,3}/, "$1~" );
+	packageInfo.fullPath = packageInfo.fullPath.replace( /([0-9][.][0-9][.][0-9])[~][0-9]{1,3}/, "$1~" );
+	packageInfo.version = info.version.split( "-" )[ 0 ];
 	packageInfo.build = "";
-	addPackage( root, packages, packageName );
+	addPackage( root, packages, packageInfo.file );
 	var copy = lift( cp );
 	return copy( info.fullPath, packageInfo.fullPath );
 }

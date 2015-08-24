@@ -1,7 +1,10 @@
 ## 0.1.*
 
+### 0.1.7
+Bug fix - promotion failed to change version specifier.
+
 ### 0.1.6
-Add information file to unpackaged directory when unpacking project.
+ * Add information file to unpackaged directory when unpacking project.
 
 ### 0.1.5
 Add package promotion support.
