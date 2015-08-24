@@ -1,5 +1,8 @@
 ## 0.1.*
 
+### 0.1.8
+Improve promote API by returning info to the promoted package.
+
 ### 0.1.7
 Bug fix - promotion failed to change version specifier.
 

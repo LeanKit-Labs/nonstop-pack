@@ -288,7 +288,10 @@ function promotePackage( root, info, packages ) {
 	packageInfo.build = "";
 	addPackage( root, packages, packageInfo.file );
 	var copy = lift( cp );
-	return copy( info.fullPath, packageInfo.fullPath );
+	return copy( info.fullPath, packageInfo.fullPath )
+		.then( function() {
+			return packageInfo;
+		} );
 }
 
 function uploadPackage( root, tmp, packageName, packages ) {
