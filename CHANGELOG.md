@@ -1,5 +1,8 @@
 ## 0.1.*
 
+### 0.1.9
+Bug fix - Defer addition of file information to package list until after move operation has invoked callback.
+
 ### 0.1.8
 Improve promote API by returning info to the promoted package.
 

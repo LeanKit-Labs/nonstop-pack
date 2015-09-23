@@ -295,11 +295,15 @@ function promotePackage( root, info, packages ) {
 }
 
 function uploadPackage( root, tmp, packageName, packages ) {
-	var info = addPackage( root, packages, packageName );
+	var info = parsePackage( root, packageName );
 	var destination = path.resolve( info.directory, packageName );
 	mkdirp.sync( info.directory );
 	var move = lift( mv );
-	return move( tmp, destination, { clobber: true } );
+	return move( tmp, destination, { clobber: true } )
+		.then( function( data ) {
+			addPackage( root, packages, packageName );
+			return data;
+		} );
 }
 
 module.exports = {
