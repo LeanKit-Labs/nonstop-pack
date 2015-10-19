@@ -1,18 +1,21 @@
 var _ = require( 'lodash' );
 var when = require( 'when' );
-var pipe = require( 'when/pipeline' );
 var exec = require( './command.js' );
 var version = require( './version.js' );
 var syspath = require( 'path' );
 
 function getBranch( path ) {
-	return exec( 'git rev-parse --abbrev-ref HEAD', path )
-		.then( function( branch ) {
-			return branch.trim();
-		} )
-		.then( null, function() {
-			return 'master';
-		} );
+	if( process.env.DRONE ) {
+		return when.resolve( process.env.DRONE_BRANCH );
+	} else {
+		return exec( 'git rev-parse --abbrev-ref HEAD', path )
+			.then( function( branch ) {
+				return branch.trim();
+			} )
+			.then( null, function() {
+				return 'master';
+			} );
+	}
 }
 
 function getCommit( path ) {
@@ -26,7 +29,8 @@ function getCommit( path ) {
 }
 
 function getFileAtSha( sha, filePath, path ) {
-	return exec( 'git show ' + sha + ':' + filePath + ' | cat', path )
+	var relativePath = syspath.relative( path, filePath );
+	return exec( 'git show ' + sha + ':' + relativePath + ' | cat', path )
 		.then( null, function() {
 			return '';
 		} );
@@ -57,6 +61,13 @@ function getRevisionListFor( filePath, path ) {
 			return _.where( lines.split( '\n' ), function( x ) {
 				return x.length && /^[0-9a-zA-Z]*$/.test( x );
 			} );
+		} );
+}
+
+function getSlug( path ) {
+	return getCommit( path )
+		.then( function( sha ) {
+			return sha.slice( 0, 8 );
 		} );
 }
 
@@ -103,6 +114,7 @@ function createInfo( path, branch, commit, owner, repo ) {
 	return {
 		branch: branch,
 		commit: commit,
+		slug: commit.slice( 0, 8 ),
 		owner: owner,
 		path: syspath.resolve( path ),
 		repository: repo
@@ -115,6 +127,8 @@ function readRepository( path ) {
 
 module.exports = {
 	commitsFor: getRevisionListFor,
+	getCommit: getCommit,
+	getSlug: getSlug,
 	getVersion: getFileAtSha,
 	getVersions: getVersionHistory,
 	getVersionsFor: getVersionHistoryFor,

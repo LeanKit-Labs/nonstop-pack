@@ -1,4 +1,39 @@
-## 0.1.0
+## 0.1.*
+
+### 0.1.9
+Bug fix - Defer addition of file information to package list until after move operation has invoked callback.
+
+### 0.1.8
+Improve promote API by returning info to the promoted package.
+
+### 0.1.7
+Bug fix - promotion failed to change version specifier.
+
+### 0.1.6
+ * Add information file to unpackaged directory when unpacking project.
+
+### 0.1.5
+Add package promotion support.
+
+### 0.1.4
+
+ * Support retrieval of all installed versions
+ * Add commit slug to package file
+
+### 0.1.3
+
+Bug fix - reading a file at sha should use relative path (affects version detection and build number).
+
+### 0.1.2
+
+Change upload from fs.rename to use `mv` module to support copying between volumes (for use with nonstop-index inside a Docker container with mounted volumes ... who knew?)
+
+### 0.1.1
+
+* Add support for detecting when packing is happening in Drone to get the branch name from the env
+* Remove attempt to get IP from sysinfo module (never used)
+
+### 0.1.0
 
 ### prerelease 14
  * Use `master` as default branch value and directory for default repository name

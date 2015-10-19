@@ -1,7 +1,7 @@
 # nonstop-pack
 This library provides all functionality around the creation and handling of artifact packages for the nonstop CI/CD system.
 
-It is unlikely that you would consume this library directly unless you are working on a package host, build agent, CLI or bootstrapper. There are already nonstop projects for each of these use cases.
+It is unlikely that you would consume this library directly unless you are working on a package host, build agent, CLI or service host. There are already nonstop projects for each of these use cases.
 
 ## Packages
 
@@ -71,19 +71,19 @@ Copy's a package from a temporary storage directory (i.e. after being uploaded) 
 // temp - the full path to the temporary location of the uploaded file
 // packageName - the name of the package file
 // packages - an array of package information details
-packages.copy( 
-		'./packages', 
-		'./tmp/891345iaghakk92thagk.tar.gz', 
+packages.copy(
+		'./packages',
+		'./tmp/891345iaghakk92thagk.tar.gz',
 		'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
 		packageList
-	).then( function() { 
-		//on success 
+	).then( function() {
+		//on success
 	} );
 ```
 
 ### create( packageInfo )
 
-> For use in build agents/clis: 
+> For use in build agents/clis:
 > * [nonstop-agent](https://github.com/LeanKit-Labs/nonstop-agent)
 > * [nonstop-cli](https://github.com/LeanKit-Labs/nonstop-cli)
 
@@ -96,7 +96,7 @@ The result will be a tar.gz with the correct package name stored based on data i
 var packageInfo = package.getInfo( 'test', config, './' );
 packages.create( packageInfo )
 	.then( function( packageInfo ) {
-		//on success 
+		//on success
 	} );
 ```
 
@@ -114,7 +114,7 @@ var matches = packages.find( packages, { owner: 'arobson', branch: 'master' } );
 
 ### getInfo( projectName, projectConfig, repositoryPath )
 
-> For use in build agents/clis: 
+> For use in build agents/clis:
 > * [nonstop-agent](https://github.com/LeanKit-Labs/nonstop-agent)
 > * [nonstop-cli](https://github.com/LeanKit-Labs/nonstop-cli)
 
@@ -147,9 +147,9 @@ packages.getInfo( 'test', config, './' )
 
 ### getInstalled( filter, installed, [ignored], [noError] )
 
-> For use in bootstrappers (as in [nonstop](https://github.com/LeanKit-Labs/nonstop))
+> For use in service hosts (as in [nonstop](https://github.com/LeanKit-Labs/nonstop))
 
-Finds the most recent version installed within a relative path. The bootstrapper stores all installed versions under a common directory (./installed) and each version has its own directory. Returns the latest version installed on success.
+Finds the most recent version installed within a relative path. The service host stores all installed versions under a common directory (./installed) and each version has its own directory. Returns the latest version installed on success.
 
 ```javascript
 // filter - regular expression to evaluation versions with
@@ -163,8 +163,14 @@ packages.getInstalled( /.*/, './installed', [], true )
 	} )
 ```
 
+### getInstalledVersions( filter, installed, [ignored], [noError] )
+
+> For use in service hosts (as in [nonstop](https://github.com/LeanKit-Labs/nonstop))
+
+Works the same as `getInstalled` but returns the complete list of installed versions ordered newest to oldest.
+
 ### getList( root )
-	
+
 > For use in package hosting (as in [nonstop-index](https://github.com/LeanKit-Labs/nonstop-index))
 
 Scans a given directory structure starting at a relative path to build an array containing package information for all packages found. Returns a promise that resolves to the array on success.
@@ -179,7 +185,7 @@ packages.getList( './packages' )
 
 ### pack( pattern, workingPath, target )
 
-> For use in build agents/clis: 
+> For use in build agents/clis:
 > * [nonstop-agent](https://github.com/LeanKit-Labs/nonstop-agent)
 > * [nonstop-cli](https://github.com/LeanKit-Labs/nonstop-cli)
 
@@ -225,16 +231,19 @@ packages.terms( packages )
 	} );
 ```
 
+### promote( root, packageInfo, packages )
+Promotes an existing package to a release and adds it the the list of packages.
+
 ### unpack( artifact, target )
 
-> For use in bootstrappers (as in [nonstop](https://github.com/LeanKit-Labs/nonstop))
+> For use in service hosts (as in [nonstop](https://github.com/LeanKit-Labs/nonstop))
 
 Unpackages a package (.tar.gz) to a target directory. If the unpack fails, this will attempt to remove the target and any contents. Returns a promise that resolves to the unpacked version or an error if the unpack fails.
 
 ```javascript
 // artifact - path including the package file
 // target - path to unpack into
-packages.unpack( 
+packages.unpack(
 		'./packages/test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
 		'./installed/test-arobson-master/0.1.0-1' )
 	.then( function( version ) {
@@ -262,4 +271,4 @@ The following nonstop projects rely on this library:
  * [build cli](https://github.com/LeanKit-Labs/nonstop-cli)
  * [build agent](https://github.com/LeanKit-Labs/nonstop-agent)
  * [package host](https://github.com/LeanKit-Labs/nonstop-index)
- * [bootstrapper](https://github.com/LeanKit-Labs/nonstop)
+ * [service host](https://github.com/LeanKit-Labs/nonstop)
