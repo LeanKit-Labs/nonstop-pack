@@ -3,6 +3,9 @@ This library provides all functionality around the creation and handling of arti
 
 It is unlikely that you would consume this library directly unless you are working on a package host, build agent, CLI or service host. There are already nonstop projects for each of these use cases.
 
+## Running the tests
+Before you can run the tests, you'll need to run the `./preTest.sh` script that creates a git repository for testing. Failure to do that will result in a lot of failed tests.
+
 ## Packages
 
 ### Information

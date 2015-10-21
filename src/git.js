@@ -1,8 +1,23 @@
 var _ = require( 'lodash' );
 var when = require( 'when' );
 var exec = require( './command.js' );
-var version = require( './version.js' );
+var versions = require( './version.js' );
+var fs = require( 'fs' );
 var syspath = require( 'path' );
+var format = require( 'util' ).format;
+
+
+function createInfo( path, branch, build, commit, owner, repo ) {
+	return {
+		branch: branch,
+		build: build,
+		commit: commit,
+		owner: owner,
+		path: syspath.resolve( path ),
+		repository: repo,
+		slug: commit.slice( 0, 8 )
+	};
+}
 
 function getBranch( path ) {
 	if( process.env.DRONE ) {
@@ -18,6 +33,13 @@ function getBranch( path ) {
 	}
 }
 
+function getBuildNumber( path ) {
+	return versions.getFile( path )
+		.then( function( file ) {
+			return getCommitsSinceCurrentVersion( path, file );
+		} );
+}
+
 function getCommit( path ) {
 	return exec( 'git rev-parse HEAD', path )
 		.then( function( commit ) {
@@ -28,11 +50,52 @@ function getCommit( path ) {
 		} );
 }
 
-function getFileAtSha( sha, filePath, path ) {
-	var relativePath = syspath.relative( path, filePath );
-	return exec( 'git show ' + sha + ':' + relativePath + ' | cat', path )
-		.then( null, function() {
-			return '';
+function getCommitCount( path, sha ) {
+	var command = format( 'git log %s..HEAD --pretty=%H', sha );
+	return exec( command, path )
+		.then( function( list ) {
+			return _.filter( list.split( '\n' ) ).length + 1;
+		} );
+}
+
+function getCommitsSinceCurrentVersion( path, filePath ) {
+	var currentVersion = getCurrentVersion( path, filePath );
+	return getCommitsSinceVersion( path, filePath, currentVersion );
+}
+
+function getCommitsSinceVersion( path, filePath, version ) {
+	var fullPath = syspath.resolve( path, filePath );
+	return getFirstCommitForVersion( path, filePath, version )
+		.then( function( firstCommit ) {
+			if( firstCommit ) {
+				return getCommitCount( path, firstCommit );
+			} else {
+				throw new Error( "Cannot retrieve commits. Unable to determine version file at path: " + fullPath );
+			}
+		} );
+}
+
+function getCurrentVersion( path, filePath ) {
+	if( filePath ) {
+		var relativePath = syspath.resolve( path, filePath );
+		var fileContent = fs.readFileSync( relativePath );
+		return versions.getVersion( filePath, fileContent );
+	} else {
+		return versions.getFile( path )
+			.then( function( filePath ) {
+				return getCurrentVersion( path, filePath );
+			} );
+	}
+}
+
+function getFirstCommitForVersion( path, filePath, version ) {
+	var regex = versions.getTemplate( filePath, version );
+	var command = format( 'git log -G%s --pretty=%H %s', regex, filePath );
+	return exec( command, path )
+		.then( function( list ) {
+			return _.last( _.filter( list.split( '\n' ) ) );
+		}, function() {
+			return 'none';
 		} );
 }
 
@@ -55,15 +118,6 @@ function getRepository( path ) {
 		} );
 }
 
-function getRevisionListFor( filePath, path ) {
-	return exec( 'git log ' + filePath + ' | grep \'commit [^\\n]*\' | sed \'s_commit[ ]\\([^\\n]*\\)_\\1_\'', path )
-		.then( function( lines ) {
-			return _.where( lines.split( '\n' ), function( x ) {
-				return x.length && /^[0-9a-zA-Z]*$/.test( x );
-			} );
-		} );
-}
-
 function getSlug( path ) {
 	return getCommit( path )
 		.then( function( sha ) {
@@ -71,66 +125,26 @@ function getSlug( path ) {
 		} );
 }
 
-function getVersionHistory( path ) {
-	return version.getFile( path )
-		.then( function( file ) {
-			return getVersionHistoryFor( file, path );
-		} );
-}
-
-function getVersionHistoryFor( filePath, path ) {
-	var versionHash = {};
-	return getRevisionListFor( path, path )
-		.then( function( commits ) {
-			return when.all( _.map( commits.reverse(), function( sha ) {
-				return getFileAtSha( sha, filePath, path )
-					.then( function( content ) {
-						return { content: content, sha: sha };
-					} );
-			} ) )
-				.then( function( contents ) {
-					return _.map( contents, function( file ) {
-						var ver = version.getVersion( filePath, file.content );
-						return { sha: file.sha, version: ver };
-					} );
-				} )
-				.then( function( versions ) {
-					var results = _.map( versions, function( v ) {
-						var index = versionHash[ v.version ];
-						if ( index ) {
-							index++;
-						} else {
-							index = 1;
-						}
-						versionHash[ v.version ] = index;
-						return { sha: v.sha, version: v.version, build: index };
-					} );
-					return results;
-				} );
-		} );
-}
-
-function createInfo( path, branch, commit, owner, repo ) {
-	return {
-		branch: branch,
-		commit: commit,
-		slug: commit.slice( 0, 8 ),
-		owner: owner,
-		path: syspath.resolve( path ),
-		repository: repo
-	};
-}
-
 function readRepository( path ) {
-	return when.try( createInfo, path, getBranch( path ), getCommit( path ), getOwner( path ), getRepository( path ) );
+	var fullPath = syspath.resolve( path );
+	if( fs.existsSync( fullPath ) ) {
+		return when.try( createInfo, path, getBranch( path ), getBuildNumber( path ), getCommit( path ), getOwner( path ), getRepository( path ) );
+	} else {
+		return when.reject( new Error( 'Cannot load repository information for invalid path "' + fullPath + '"' ) );
+	}
 }
 
 module.exports = {
-	commitsFor: getRevisionListFor,
+	getBranch: getBranch,
+	getBuildNumber: getBuildNumber,
 	getCommit: getCommit,
+	getCommitCount: getCommitCount,
+	getCommitsSinceVersion: getCommitsSinceVersion,
+	getCommitsSinceCurrentVersion: getCommitsSinceCurrentVersion,
+	getCurrentVersion: getCurrentVersion,
+	getFirstCommitForVersion: getFirstCommitForVersion,
+	getOwner: getOwner,
+	getRepository: getRepository,
 	getSlug: getSlug,
-	getVersion: getFileAtSha,
-	getVersions: getVersionHistory,
-	getVersionsFor: getVersionHistoryFor,
 	repo: readRepository
 };

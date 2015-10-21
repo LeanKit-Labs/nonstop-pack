@@ -1,3 +1,15 @@
+## 0.2.*
+
+### 0.2.0
+
+ * Change how build numbers are calculated
+   * Simplify the process previously used to fewer steps
+   * Better leveraging of git's CLI features
+   * Count all commits since the version was changed
+ * Add a script to create a one-off git repository so that tests can run anywhere
+ * Rework the git module API
+ * Replace cp, mv and rimraf with fs-extra
+
 ## 0.1.*
 
 ### 0.1.9

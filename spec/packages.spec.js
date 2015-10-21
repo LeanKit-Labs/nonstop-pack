@@ -1,12 +1,9 @@
 require( './setup' );
 var _ = require( 'lodash' );
 var package = require( '../src/package.js' );
-var mkdirp = require( 'mkdirp' );
-var rimraf = require( 'rimraf' );
-var fs = require( 'fs' );
+var fs = require( 'fs-extra' );
 var path = require( 'path' );
-var git = require( '../src/git' );
-mkdirp( './packages' );
+fs.mkdirpSync( './packages' );
 
 describe( 'Package', function() {
 	describe( 'when getting package version', function() {
@@ -228,61 +225,60 @@ describe( 'Package', function() {
 	describe( 'when creating packages', function() {
 		describe( 'with invalid path', function() {
 			var error;
-			before( function( done ) {
+			before( function() {
 				this.timeout( 5000 );
-				package.getInfo( 'test', {
-					path: './farts',
+				return package.getInfo( 'test', {
+					path: './',
 					pack: {
 						pattern: '/durp/**'
-					} }, './' )
+					} }, './farts' )
 				.then( null, function( err ) {
 					error = err;
-					done();
 				} );
 			} );
 
 			it( 'should report error', function() {
-				error.toString().should.equal( 'Error: Cannot search for version files in bad path "/git/labs/nonstop/nonstop-pack/farts"' );
+				error.toString().should.equal( 'Error: Cannot load repository information for invalid path "/git/labs/nonstop/nonstop-pack/farts"' );
 			} );
 		} );
 
 		describe( 'with invalid package pattern', function() {
 			var error, info;
-			before( function( done ) {
+			before( function() {
 				this.timeout( 5000 );
-				package.getInfo( 'test', {
+				return package.getInfo( 'test', {
 					path: './',
 					pack: {
 						pattern: '/durp/**'
-					} }, './' )
+					} }, './fauxgitaboudit' )
 				.then( function( result ) {
 					info = result;
-					done();
-				} );
+				}, function( e ) { console.log( e.stack ); } );
 			} );
 
 			it( 'should retrieve correct information', function() {
 				// omit file list and values that change due to commits in the repo
-				_.omit( info, 'files', 'build', 'commit', 'slug', 'output', 'version', 'name' ).should.eql(
+				_.omit( info, 'files', 'commit', 'slug', 'output', 'name' ).should.eql(
 					{
 						branch: 'master',
-						owner: 'arobson',
+						owner: 'anonymous',
 						pattern: '/durp/**',
-						path: '/git/labs/nonstop/nonstop-pack'
+						build: 5,
+						version: '0.1.1',
+						path: '/git/labs/nonstop/nonstop-pack/fauxgitaboudit'
 					} );
 			} );
 
 			describe( 'when creating package from info', function() {
-				before( function( done ) {
-					package.create( info )
+				before( function() {
+					return package.create( info )
 						.then( null, function( err ) {
 							error = err;
-							done();
 						} );
 				} );
 
 				it( 'should report error', function() {
-					error.toString().should.equal( 'Error: No files matched the pattern "/durp/**" in path "/git/labs/nonstop/nonstop-pack". No package was generated.' );
+					error.toString().should.equal( 'Error: No files matched the pattern "/durp/**" in path "/git/labs/nonstop/nonstop-pack/fauxgitaboudit". No package was generated.' );
 				} );
 
 				it( 'should not have created package', function() {
@@ -298,8 +294,8 @@ describe( 'Package', function() {
 				package.getInfo( 'test', {
 					path: './',
 					pack: {
-						pattern: './src/**/*,./node_modules/**/*'
-					} }, './' )
+						pattern: '*'
+					} }, './fauxgitaboudit' )
 				.then( function( result ) {
 					info = result;
 					done();
@@ -311,19 +307,18 @@ describe( 'Package', function() {
 				_.omit( info, 'files', 'build', 'commit', 'output', 'version', 'name' ).should.eql(
 					{
 						branch: 'master',
-						owner: 'arobson',
-						pattern: './src/**/*,./node_modules/**/*',
-						path: '/git/labs/nonstop/nonstop-pack',
+						owner: 'anonymous',
+						pattern: '*',
+						path: '/git/labs/nonstop/nonstop-pack/fauxgitaboudit',
 						slug: info.slug
 					} );
 			} );
 
 			describe( 'when creating package from info', function() {
-				before( function( done ) {
+				before( function() {
 					this.timeout( 5000 );
-					package.create( info )
+					return package.create( info )
 						.then( function() {
-							done();
 						} );
 				} );
 
@@ -338,7 +333,7 @@ describe( 'Package', function() {
 				} );
 
 				after( function( done ) {
-					rimraf( './packages', function() {
+					fs.remove( './packages', function() {
 						done();
 					} );
 				} );
@@ -348,20 +343,19 @@ describe( 'Package', function() {
 
 	describe( 'when getting information for new package using versionFile', function() {
 		var info, version;
-		before( function( done ) {
+		before( function() {
 			var text = fs.readFileSync( './package.json' );
 			var json = JSON.parse( text );
 			version = json.version.split( '-' )[ 0 ];
 
-			package.getInfo( 'test', {
+			return package.getInfo( 'test', {
 				path: './',
 				versionFile: './package.json',
 				pack: {
 					pattern: './src/**/*,./node_modules/**/*'
-				} }, './' )
+				} }, './fauxgitaboudit' )
 			.then( function( result ) {
 				info = result;
-				done();
 			} );
 		} );
 
@@ -370,9 +364,9 @@ describe( 'Package', function() {
 			_.omit( info, 'files', 'build', 'commit', 'slug', 'output', 'name', 'version' ).should.eql(
 				{
 					branch: 'master',
-					owner: 'arobson',
+					owner: 'anonymous',
 					pattern: './src/**/*,./node_modules/**/*',
-					path: '/git/labs/nonstop/nonstop-pack'
+					path: '/git/labs/nonstop/nonstop-pack/fauxgitaboudit'
 				} );
 		} );
 	} );
@@ -381,13 +375,12 @@ describe( 'Package', function() {
 
 		describe( 'with valid package', function() {
 			var result;
-			before( function( done ) {
-				package.unpack(
+			before( function() {
+				return package.unpack(
 					'./spec/files/proj1-owner1-branch2/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
 					'./spec/installed/proj1-owner1-branch2/0.0.2-1' )
 					.then( function( version ) {
 						result = version;
-						done();
 					} );
 			} );
 
@@ -424,7 +417,7 @@ describe( 'Package', function() {
 			} );
 
 			after( function( done ) {
-				rimraf( './spec/installed/proj1-owner1-branch2', function() {
+				fs.remove( './spec/installed/proj1-owner1-branch2', function() {
 					done();
 				} );
 			} );
@@ -432,13 +425,12 @@ describe( 'Package', function() {
 
 		describe( 'with valid package includes slug', function() {
 			var result;
-			before( function( done ) {
-				package.unpack(
+			before( function() {
+				return package.unpack(
 					'./spec/files/proj1-owner1-branch2/proj1~owner1~branch2~a1b2c3d4~0.0.2~3~darwin~OSX~10.9.2~x64.tar.gz',
 					'./spec/installed/proj1-owner1-branch2/0.0.2-3' )
 					.then( function( version ) {
 						result = version;
-						done();
 					} );
 			} );
 
@@ -451,7 +443,7 @@ describe( 'Package', function() {
 			} );
 
 			after( function( done ) {
-				rimraf( './spec/installed/proj1-owner1-branch2', function() {
+				fs.remove( './spec/installed/proj1-owner1-branch2', function() {
 					done();
 				} );
 			} );
@@ -459,13 +451,12 @@ describe( 'Package', function() {
 
 		describe( 'with missing package', function() {
 			var result;
-			before( function( done ) {
-				package.unpack(
+			before( function() {
+				return package.unpack(
 					'./spec/files/proj1-owner1-branch1/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
 					'./spec/installed/proj1-owner1-branch2/0.0.2-1' )
 					.then( null, function( err ) {
 						result = err;
-						done();
 					} );
 			} );
 
@@ -488,16 +479,14 @@ describe( 'Package', function() {
 
 		describe( 'with temp file', function() {
 			var packages = [];
-			before( function( done ) {
-				mkdirp.sync( './spec/uploads' );
-				package.copy(
+			before( function() {
+				fs.mkdirpSync( './spec/uploads' );
+				return package.copy(
 					'./spec/uploads',
 					'./spec/891345iaghakk92thagk.tar.gz',
 					'test~arobson~master~0.1.0~1~darwin~any~any~x64.tar.gz',
 					packages
-				).then( function() {
-					done();
-				} );
+				);
 			} );
 
 			it( 'should copy file to the correct location', function() {
@@ -557,9 +546,8 @@ describe( 'Package', function() {
 			} );
 
 			after( function( done ) {
-				rimraf( './spec/installed/proj1-owner1-branch2', function() {
-					done();
-					rimraf( './spec/uploads/test-arobson-master', function() {
+				fs.remove( './spec/installed/proj1-owner1-branch2', function() {
+					fs.remove( './spec/uploads/test-arobson-master', function() {
 						done();
 					} );
 				} );
