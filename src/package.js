@@ -1,24 +1,17 @@
 var semver = require( "semver" );
 var when = require( "when" );
 var lift = require( "when/node" ).lift;
-var pipeline = require( "when/pipeline" );
 var path = require( "path" );
-var fs = require( "fs" );
-var mkdirp = require( "mkdirp" );
 var _ = require( "lodash" );
 var archiver = require( "archiver" );
 var zlib = require( "zlib" );
 var tar = require( "tar-fs" );
-var rimraf = require( "rimraf" );
 var git = require( "./git.js" );
 var debug = require( "debug" )( "nonstop:package" );
 var sysInfo = require( "./sysInfo.js" )();
 var glob = require( "globulesce" );
-var fs = require( "fs" );
-var mv = require( "mv" );
-var cp = require( "cp" );
+var fs = require( "fs-extra" );
 var readdir = lift( fs.readdir );
-var stat = lift( fs.stat );
 
 function addPackage( root, packages, packageName ) {
 	var info = parsePackage( root, packageName );
@@ -45,7 +38,6 @@ function findPackage( packages, filter ) {
 }
 
 function getInstalledVersions( filter, installed, ignored, noError ) {
-	var versions = [];
 	return readdir( installed )
 		.then( function( files ) {
 			var promises = _.map( files, function( file ) {
@@ -116,31 +108,30 @@ function getPackageInfo( projectName, config, repoInfo ) {
 		repoPath = repoInfo.path;
 		repoPromise = when( projectPath );
 	}
-	var versionPromise = config.versionFile ? when.try( git.getVersionsFor, config.versionFile, repoPromise ) : when.try( git.getVersions, repoPromise );
-	return when.try( function( versions ) {
-		var last;
-		if( versions && versions.length ) {
-			last = versions[ versions.length - 1 ];
-		} else {
+	var versionPromise = config.versionFile ? when.try( git.getCurrentVersion, repoPromise, config.versionFile ) : when.try( git.getCurrentVersion, repoPromise );
+	var buildPromise = config.versionFile ? when.try( git.getCommitsSinceCurrentVersion, repoPromise, config.versionFile ) : when.try( git.getBuildNumber, repoPromise );
+	return when.try( function( version, build ) {
+		if( !version || !build ) {
 			debug( "No versions found for project \"" + projectName + "\" at \"" + projectPath + "\". Using \"0.0.0\"." );
-			last = last || { version: "0.0.0", build: 0 };
+			version = "0.0.0";
+			build = 0;
 		}
-		var packageName = _.filter( [ projectName, owner, branch, slug, last.version, last.build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ] ).join( "~" );
+		var packageName = _.filter( [ projectName, owner, branch, slug, version, build, sysInfo.platform, sysInfo.osName, sysInfo.osVersion, sysInfo.arch ] ).join( "~" );
 		var packagePath = path.resolve( "./packages", packageName + ".tar.gz" );
 		var info = {
 			path: projectPath,
 			name: packageName,
 			output: packagePath,
-			build: last.build,
+			build: build,
 			branch: branch,
 			commit: commit,
 			slug: slug,
 			owner: owner,
-			version: last.version,
+			version: version,
 			pattern: config.pack ? config.pack.pattern : undefined,
 		};
 		return info;
-	}, versionPromise );
+	}, versionPromise, buildPromise );
 }
 
 function getPackageVersion( file ) {
@@ -155,7 +146,7 @@ function getPackageVersion( file ) {
 function pack( pattern, workingPath, target ) {
 	pattern = pattern || "";
 	return when.promise( function( resolve, reject ) {
-		mkdirp.sync( path.dirname( target ) );
+		fs.mkdirpSync( path.dirname( target ) );
 		var archivedFiles = [];
 		var patterns = _.isArray( pattern ) ? pattern : pattern.split( "," );
 		return glob( workingPath, patterns, [ ".git" ] )
@@ -258,12 +249,12 @@ function unpack( artifact, target ) {
 	var info = parsePackage( "", file );
 	return when.promise( function( resolve, reject ) {
 		if( fs.existsSync( artifact ) ) {
-			mkdirp.sync( target );
+			fs.mkdirpSync( target );
 			fs.createReadStream( artifact )
 				.pipe( zlib.createUnzip() )
 				.pipe( tar.extract( target ) )
 				.on( "error", function ( err ) {
-					rimraf( path.resolve( target ), function( err ) {
+					fs.remove( path.resolve( target ), function( err ) {
 						if( err ) {
 							console.log( "Could not delete failed install at", target, err.stack );
 						}
@@ -287,7 +278,7 @@ function promotePackage( root, info, packages ) {
 	packageInfo.version = info.version.split( "-" )[ 0 ];
 	packageInfo.build = "";
 	addPackage( root, packages, packageInfo.file );
-	var copy = lift( cp );
+	var copy = lift( fs.copy );
 	return copy( info.fullPath, packageInfo.fullPath )
 		.then( function() {
 			return packageInfo;
@@ -297,8 +288,8 @@ function promotePackage( root, info, packages ) {
 function uploadPackage( root, tmp, packageName, packages ) {
 	var info = parsePackage( root, packageName );
 	var destination = path.resolve( info.directory, packageName );
-	mkdirp.sync( info.directory );
-	var move = lift( mv );
+	fs.mkdirpSync( info.directory );
+	var move = lift( fs.move );
 	return move( tmp, destination, { clobber: true } )
 		.then( function( data ) {
 			addPackage( root, packages, packageName );

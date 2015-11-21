@@ -1,8 +1,8 @@
 var _ = require( 'lodash' );
-var when = require( 'when' );
 var glob = require( 'globulesce' );
 var path = require( 'path' );
 var fs = require( 'fs' );
+var format = require( 'util' ).format;
 
 function parseErlangVersion( content ) {
 	var regex = /[{]\W?vsn[,]\W?\"([0-9.]+)\"/;
@@ -27,11 +27,22 @@ var parsers = {
 	'.cs': parseDotNetVersion
 };
 
-var searchPaths = [ 
+var searchPaths = [
 	'{.,**}/package.json',
 	'{.,**}/*.app.src',
 	'{.,**}/AssemblyInfo.cs'
 ];
+
+var searchTemplates = {
+	'.src': '[{]\W?vsn[,]\W?\\"%s\\"',
+	'.json': '\\"version\\"\S*[:]\S*\\"%s\\"',
+	'.cs': '^\\[assembly:\W?[aA]ssemblyVersion(Attribute)?\W?\\(\W?\\"%s\\"\W*$'
+};
+
+function getTemplate( filePath, version ) {
+	var ext = path.extname( filePath );
+	return format( searchTemplates[ ext ], version );
+}
 
 function getVersionFile( projectPath ) {
 	var resolvedPath = path.resolve( projectPath );
@@ -42,8 +53,7 @@ function getVersionFile( projectPath ) {
 			} else {
 				return x[ 0 ];
 			}
-		} )
-		.then( null, function( err ) {
+		}, function() {
 			throw new Error( 'Cannot search for version files in bad path "' + projectPath + '"' );
 		} );
 }
@@ -58,5 +68,6 @@ function getVersion( filePath, content ) {
 
 module.exports = {
 	getFile: getVersionFile,
+	getTemplate: getTemplate,
 	getVersion: getVersion
 };
