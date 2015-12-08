@@ -1,7 +1,7 @@
 mkdir ./fauxgitaboudit
 cd ./fauxgitaboudit
 git init
-echo "{\"version\":\"0.1.0\"}" > ./package.json
+echo "{\"version\": \"0.1.0\"}" > ./package.json
 git add .
 git commit -m "initial commit"
 echo 1 > change.log
@@ -19,7 +19,7 @@ git commit -m "commit 4"
 echo 5 > change.log
 git add .
 git commit -m "commit 5"
-echo "{\"version\":\"0.1.1\"}" > ./package.json
+echo "{\"version\": \"0.1.1\"}" > ./package.json
 echo 6 > change.log
 git add .
 git commit -m "commit 6"
