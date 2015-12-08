@@ -1,6 +1,6 @@
 ## 0.2.*
 
-### Next
+### 0.2.1
  * Add simple version to package information by default
  * Corrections to build number calculation
  * Improvements to spec that were machine path specific
