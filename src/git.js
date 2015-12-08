@@ -50,8 +50,8 @@ function getCommit( path ) {
 		} );
 }
 
-function getCommitCount( path, sha ) {
-	var command = format( 'git log %s..HEAD --pretty=%H', sha );
+function getCommitCount( path, sha, time ) {
+	var command = format( 'git log --since=%s %s..HEAD --pretty=%H', time, sha );
 	return exec( command, path )
 		.then( function( list ) {
 			return _.filter( list.split( '\n' ) ).length + 1;
@@ -66,9 +66,9 @@ function getCommitsSinceCurrentVersion( path, filePath ) {
 function getCommitsSinceVersion( path, filePath, version ) {
 	var fullPath = syspath.resolve( path, filePath );
 	return getFirstCommitForVersion( path, filePath, version )
-		.then( function( firstCommit ) {
-			if( firstCommit ) {
-				return getCommitCount( path, firstCommit );
+		.then( function( firstCommitAndDate ) {
+			if( firstCommitAndDate ) {
+				return getCommitCount( path, firstCommitAndDate[0], firstCommitAndDate[1] );
 			} else {
 				throw new Error( "Cannot retrieve commits. Unable to determine version file at path: " + fullPath );
 			}
@@ -90,10 +90,10 @@ function getCurrentVersion( path, filePath ) {
 
 function getFirstCommitForVersion( path, filePath, version ) {
 	var regex = versions.getTemplate( filePath, version );
-	var command = format( 'git log -G%s --pretty=%H %s', regex, filePath );
+	var command = format( 'git log -S\'%s\' --pickaxe-regex --pretty=\'%H|%ct\' %s', regex, filePath );
 	return exec( command, path )
 		.then( function( list ) {
-			return _.last( _.filter( list.split( '\n' ) ) );
+			return _.last( _.filter( list.split( '\n' ) ) ).split( "|" );
 		}, function() {
 			return 'none';
 		} );

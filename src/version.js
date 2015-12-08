@@ -34,9 +34,9 @@ var searchPaths = [
 ];
 
 var searchTemplates = {
-	'.src': '[{]\W?vsn[,]\W?\\"%s\\"',
-	'.json': '\\"version\\"\S*[:]\S*\\"%s\\"',
-	'.cs': '^\\[assembly:\W?[aA]ssemblyVersion(Attribute)?\W?\\(\W?\\"%s\\"\W*$'
+	'.src': '[{]\\W?vsn[,]\\W?"%s"',
+	'.json': '"version"\\s*[:]\\s*"%s"',
+	'.cs': '^\\[assembly:\\W?[aA]ssemblyVersion(Attribute)?\\W?\\(\\W?"%s"\\W*$'
 };
 
 function getTemplate( filePath, version ) {
