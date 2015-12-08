@@ -115,13 +115,14 @@ describe( 'Package', function() {
 			} );
 
 			it( 'should return correct list of terms', function() {
-				terms.should.eql( [
-					{ '0.0.1-5': 'version' },
-					{ x64: 'architecture' },
+				terms.sort().should.deep.equal( [
+					{ '10.9.2': 'osVersion' },
+					{ '0.0.2-1': 'version' },
 					{ OSX: 'osName' },
 					{ darwin: 'platform' },
 					{ '1': 'build' },
 					{ '0.0.1-1': 'version' },
+					{ '0.0.1': 'simpleVersion' },
 					{ branch1: 'branch' },
 					{ owner1: 'owner' },
 					{ proj1: 'project' },
@@ -132,17 +133,20 @@ describe( 'Package', function() {
 					{ '4': 'build' },
 					{ '0.0.1-4': 'version' },
 					{ '5': 'build' },
-					{ '10.9.2': 'osVersion' },
-					{ '0.0.2-1': 'version' },
+					{ '0.0.1-5': 'version' },
+					{ x64: 'architecture' },
+					{ '0.0.2': 'simpleVersion' },
 					{ '0.0.2-2': 'version' },
 					{ '0.0.2-3': 'version' },
 					{ '14.04LTS': 'osVersion' },
 					{ ubuntu: 'osName' },
 					{ linux: 'platform' },
 					{ '0.1.0-1': 'version' },
+					{ '0.1.0': 'simpleVersion' },
 					{ '0.1.0-2': 'version' },
 					{ branch2: 'branch' },
 					{ '0.2.0-1': 'version' },
+					{ '0.2.0': 'simpleVersion' },
 					{ owner2: 'owner' },
 					{ '0.2.0-2': 'version' },
 					{ '0.2.0-3': 'version' },
@@ -167,20 +171,22 @@ describe( 'Package', function() {
 			} );
 
 			it( 'should return correct list of terms', function() {
-				terms.should.eql( [
+				terms.sort().should.eql( [
+					{ owner1: 'owner' },
 					{ x64: 'architecture' },
-					{ '10.9.2': 'osVersion' },
 					{ OSX: 'osName' },
 					{ darwin: 'platform' },
 					{ '2': 'build' },
 					{ '0.1.0-2': 'version' },
+					{ '0.1.0': 'simpleVersion' },
 					{ branch2: 'branch' },
-					{ owner1: 'owner' },
+					{ '10.9.2': 'osVersion' },
 					{ proj1: 'project' },
 					{ '1': 'build' },
 					{ '0.1.0-1': 'version' },
 					{ '3': 'build' },
 					{ '0.0.2-3': 'version' },
+					{ '0.0.2': 'simpleVersion' },
 					{ '0.0.2-2': 'version' },
 					{ '0.0.2-1': 'version' }
 				] );
@@ -213,11 +219,17 @@ describe( 'Package', function() {
 
 			before( function() {
 				package.add( './spec/files', list, newPackage );
-				matches = package.find( list, project1 );
 			} );
 
-			it( 'should include new package in results', function() {
+			it( 'should include new package at the top of results', function() {
+				matches = package.find( list, project1 );
 				matches.length.should.equal( 6 );
+				matches[ 0 ].version.should.equal( '0.2.1-1' );
+			} );
+
+			it( 'should find new package by simpleVersion', function() {
+				matches = package.find( list, { simpleVersion: '0.2.1' } );
+				matches.length.should.equal( 1 );
 				matches[ 0 ].version.should.equal( '0.2.1-1' );
 			} );
 		} );
@@ -408,6 +420,7 @@ describe( 'Package', function() {
 						platform: 'darwin',
 						project: 'proj1',
 						relative: 'proj1-owner1-branch2',
+						simpleVersion: '0.0.2',
 						version: '0.0.2-1'
 
 					} );
@@ -512,6 +525,7 @@ describe( 'Package', function() {
 					project: 'test',
 					relative: 'test-arobson-master',
 					slug: undefined,
+					simpleVersion: '0.1.0',
 					version: '0.1.0-1'
 				} );
 			} );
@@ -541,7 +555,8 @@ describe( 'Package', function() {
 						project: 'test',
 						relative: 'test-arobson-master',
 						slug: undefined,
-						version: '0.1.0'
+						version: '0.1.0',
+						simpleVersion: '0.1.0'
 					} );
 				} );
 			} );
