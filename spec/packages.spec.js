@@ -4,6 +4,7 @@ var package = require( '../src/package.js' );
 var fs = require( 'fs-extra' );
 var path = require( 'path' );
 fs.mkdirpSync( './packages' );
+var PROJECT_ROOT = path.resolve( __dirname, ".." );
 
 describe( 'Package', function() {
 	describe( 'when getting package version', function() {
@@ -238,7 +239,7 @@ describe( 'Package', function() {
 			} );
 
 			it( 'should report error', function() {
-				error.toString().should.equal( 'Error: Cannot load repository information for invalid path "/git/labs/nonstop/nonstop-pack/farts"' );
+				error.toString().should.equal( 'Error: Cannot load repository information for invalid path "' + path.join( PROJECT_ROOT, '/farts' ) + '"' );
 			} );
 		} );
 
@@ -265,7 +266,7 @@ describe( 'Package', function() {
 						pattern: '/durp/**',
 						build: 5,
 						version: '0.1.1',
-						path: '/git/labs/nonstop/nonstop-pack/fauxgitaboudit'
+						path: path.join( PROJECT_ROOT, '/fauxgitaboudit' )
 					} );
 			} );
 
@@ -278,7 +279,7 @@ describe( 'Package', function() {
 				} );
 
 				it( 'should report error', function() {
-					error.toString().should.equal( 'Error: No files matched the pattern "/durp/**" in path "/git/labs/nonstop/nonstop-pack/fauxgitaboudit". No package was generated.' );
+					error.toString().should.equal( 'Error: No files matched the pattern "/durp/**" in path "' + path.join( PROJECT_ROOT, '/fauxgitaboudit' ) + '". No package was generated.' );
 				} );
 
 				it( 'should not have created package', function() {
@@ -309,7 +310,7 @@ describe( 'Package', function() {
 						branch: 'master',
 						owner: 'anonymous',
 						pattern: '*',
-						path: '/git/labs/nonstop/nonstop-pack/fauxgitaboudit',
+						path: path.join( PROJECT_ROOT, '/fauxgitaboudit' ),
 						slug: info.slug
 					} );
 			} );
@@ -366,7 +367,7 @@ describe( 'Package', function() {
 					branch: 'master',
 					owner: 'anonymous',
 					pattern: './src/**/*,./node_modules/**/*',
-					path: '/git/labs/nonstop/nonstop-pack/fauxgitaboudit'
+					path: path.join( PROJECT_ROOT, '/fauxgitaboudit' )
 				} );
 		} );
 	} );
@@ -398,9 +399,9 @@ describe( 'Package', function() {
 						architecture: 'x64',
 						branch: 'branch2',
 						build: '1',
-						directory: '/git/labs/nonstop/nonstop-pack/proj1-owner1-branch2',
+						directory: path.join( PROJECT_ROOT, '/proj1-owner1-branch2' ),
 						file: 'proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
-						fullPath: '/git/labs/nonstop/nonstop-pack/proj1-owner1-branch2/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz',
+						fullPath: path.join( PROJECT_ROOT, '/proj1-owner1-branch2/proj1~owner1~branch2~0.0.2~1~darwin~OSX~10.9.2~x64.tar.gz' ),
 						osName: 'OSX',
 						osVersion: '10.9.2',
 						owner: 'owner1',
