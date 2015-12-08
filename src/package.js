@@ -196,6 +196,7 @@ function parsePackage( root, packageName, directory ) {
 		owner: parts[ 1 ],
 		branch: parts[ 2 ],
 		slug: slug,
+		simpleVersion: parts[ 3 + offset ],
 		version: _.filter( [ parts[ 3 + offset ], parts[ 4 + offset ] ] ).join( "-" ),
 		build: parts[ 4 + offset ],
 		platform: parts[ 5 + offset ],

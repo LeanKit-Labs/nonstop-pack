@@ -1,5 +1,10 @@
 ## 0.2.*
 
+### Next
+ * Add simple version to package information by default
+ * Corrections to build number calculation
+ * Improvements to spec that were machine path specific
+
 ### 0.2.0
 
  * Change how build numbers are calculated
